@@ -1,9 +1,11 @@
----
+# A dictionary of controller name to Spectrograph controller package connection parameters.
+controllers:
+  sp1:
+    host: 10.7.45.27
+    port: 4242
 
-option1:
-    suboption1: 1
-    suboption2: "some text"
-    suboption3:
-        subsuboption1: [1, 2, 3]
-
-option2: 2.0
+# Actor configuration for the AMQPActor class
+actor:
+  name: SCP
+  host: localhost
+  port: 5672
