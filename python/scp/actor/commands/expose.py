@@ -1,10 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+# @Author: Mingyeong YANG (mingyeong@khu.ac.kr)
+# @Date: 2021-03-22
+# @Filename: actor.py
+# @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
+
 import asyncio
 import click
 
-from clu import AMQPActor, command_parser
+from . import parser
 
-
-@command_parser.command()
+@parser.command()
 @click.argument("EXPTIME", type=float)
 async def expose(command, exptime):
     """Exposes the camera."""
@@ -50,21 +57,3 @@ async def expose(command, exptime):
     return command.finish(text="Exposure done!")
 
 
-class SCPActor(AMQPActor):
-    def __init__(self):
-        super().__init__(
-            name="scp_actor",
-            user="guest",
-            password="guest",
-            host="localhost",
-            port=5672,
-            version="0.1.0",
-        )
-
-
-async def run_actor():
-    actor = await SCPActor().start()
-    await actor.run_forever()
-
-
-asyncio.run(run_actor())
