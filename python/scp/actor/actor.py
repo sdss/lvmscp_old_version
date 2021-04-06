@@ -15,9 +15,11 @@ from contextlib import suppress
 
 from clu.actor import AMQPActor
 
-__all__ = ["SCP_Actor"]
+from .commands import parser as SCP_command_parser
 
-class SCP_Actor(AMQPActor):
+__all__ = ["SCPActor"]
+
+class SCPActor(AMQPActor):
     """SCP controller actor.
     In addition to the normal arguments and keyword parameters for
     `~clu.actor.AMQPActor`, the class accepts the following parameters.
@@ -27,34 +29,20 @@ class SCP_Actor(AMQPActor):
         The list of `.SCP_Controller` instances to manage.
     """
 
-    #parser = SCP_command_parser
+    parser = SCP_command_parser
 
     def __init__(
         self,
         *args,
-        controllers: tuple[SCP_Controller, ...] = (),
         **kwargs,
     ):
-        #: dict[str, SCP_Controller]: A mapping of controller name to controller.
-        self.controllers = {c.name: c for c in controllers}
-
-        self.parser_args = [self.controllers]
-
-"""
-        if "schema" not in kwargs:
-            kwargs["schema"] = os.path.join(
-                os.path.dirname(__file__),
-                "../etc/SCP.json",
-            )
-"""
         super().__init__(*args, **kwargs)
 
         self.observatory = os.environ.get("OBSERVATORY", "LCO")
         self.version = "0.1.0"
 
-        self.name = "scp_actor"
+        self.name = "SCP"
         self.user = "guest"
         self.password = "guest"
         self.host = "localhost"
         self.port = 5672
-

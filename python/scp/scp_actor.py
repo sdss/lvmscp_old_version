@@ -1,3 +1,6 @@
+#We don't need this script anymore_CK
+
+
 import asyncio
 import click
 

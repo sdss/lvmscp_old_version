@@ -9,7 +9,9 @@
 import asyncio
 import click
 
-@command_parser.command()
+from . import parser
+
+@parser.command()
 @click.argument("EXPTIME", type=float)
 async def expose(command, exptime):
     """Exposes the camera."""
