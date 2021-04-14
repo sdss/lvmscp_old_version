@@ -38,11 +38,3 @@ class SCPActor(AMQPActor):
     ):
         super().__init__(*args, **kwargs)
 
-        self.observatory = os.environ.get("OBSERVATORY", "LCO")
-        self.version = "0.1.0"
-
-        self.name = "SCP"
-        self.user = "guest"
-        self.password = "guest"
-        self.host = "localhost"
-        self.port = 5672

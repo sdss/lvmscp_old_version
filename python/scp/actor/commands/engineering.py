@@ -13,7 +13,7 @@ from . import parser
 
 @parser.command()
 @click.argument("EXPTIME", type=float)
-async def expose(command, exptime):
+async def engineering(command, exptime):
     """Exposes the camera."""
 
     command.info(text="Starting the exposure.")
@@ -30,7 +30,7 @@ async def expose(command, exptime):
     """
 
     # Use command to access the actor and command the shutter
-    shutter_cmd = await command.actor.send_command("shutter_actor", "open")
+    shutter_cmd = await command.actor.send_command("OsuActor", "open")
 
     await shutter_cmd  # Block until the command is done (finished or failed)
     if shutter_cmd.status.did_fail:
@@ -50,7 +50,7 @@ async def expose(command, exptime):
     await asyncio.sleep(exptime)
 
     # Close the shutter. Note the double await.
-    await (await command.actor.send_command("shutter_actor", "close"))
+    await (await command.actor.send_command("OsuActor", "close"))
 
     # Finish exposure, read buffer, etc.
 
