@@ -10,10 +10,10 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import os
-
+import asyncio
 import click
 from click_default_group import DefaultGroup
-from clu.tools import cli_coro
+from clu.tools import cli_coro as cli_coro_scp
 
 from sdsstools.daemonizer import DaemonGroup
 
@@ -36,24 +36,24 @@ from scp.actor.actor import SCPActor as SCPActorInstance
 )
 @click.pass_context
 def SCPActor(ctx, config_file, verbose):
-    """Osu controller"""
+    """SCP"""
 
-    ctx.obj = {"verbose": verbose, "config_file": config_file}
+#    ctx.obj = {"verbose": verbose, "config_file": config_file}
 
 
-@SCPActor.group(cls=DaemonGroup, prog="actor", workdir=os.getcwd())
+@SCPActor.group(cls=DaemonGroup, prog="scp_actor", workdir=os.getcwd())
 @click.pass_context
-@cli_coro
+@cli_coro_scp
 async def actor(ctx):
     """Runs the actor."""
     default_config_file = os.path.join(os.path.dirname(__file__), "etc/SCP.yml")
-    config_file = ctx.obj["config_file"] or default_config_file
+#    config_file = ctx.obj["config_file"] or default_config_file
 
-    scpactor_obj = SCPActorInstance.from_config(config_file)
+    scpactor_obj = SCPActorInstance.from_config(default_config_file)
 
-    if ctx.obj["verbose"]:
-        scpactor_obj.log.fh.setLevel(0)
-        scpactor_obj.log.sh.setLevel(0)
+#    if ctx.obj["verbose"]:
+#        scpactor_obj.log.fh.setLevel(0)
+#        scpactor_obj.log.sh.setLevel(0)
 
     await scpactor_obj.start()
     await scpactor_obj.run_forever()
