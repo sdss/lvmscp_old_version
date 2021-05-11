@@ -15,6 +15,23 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "astropy"
+version = "4.2.1"
+description = "Astronomy and astrophysics core library"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+numpy = ">=1.17"
+pyerfa = "*"
+
+[package.extras]
+all = ["scipy (>=1.1)", "dask", "h5py", "beautifulsoup4", "html5lib", "bleach", "PyYAML (>=3.13)", "pandas", "sortedcontainers", "pytz", "jplephem", "matplotlib (>=3.0)", "mpmath", "asdf (>=2.6)", "bottleneck", "ipython", "pytest"]
+docs = ["sphinx", "sphinx-astropy (>=1.3)", "pytest", "PyYAML (>=3.13)", "scipy (>=1.1)", "matplotlib (>=3.1)"]
+test = ["pytest-astropy (>=0.8)", "pytest-xdist", "objgraph", "ipython", "coverage", "skyfield (>=1.20)", "sgp4 (>=2.3)"]
+
+[[package]]
 name = "atomicwrites"
 version = "1.4.0"
 description = "Atomic file writes."
@@ -359,7 +376,7 @@ python-versions = "*"
 name = "numpy"
 version = "1.20.2"
 description = "NumPy is the fundamental package for array computing with Python."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -469,6 +486,21 @@ description = "Python style guide checker"
 category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+
+[[package]]
+name = "pyerfa"
+version = "1.7.3"
+description = "Python bindings for ERFA"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[package.dependencies]
+numpy = ">=1.16"
+
+[package.extras]
+docs = ["sphinx-astropy (>=1.3)"]
+test = ["pytest", "pytest-doctestplus (>=0.7)"]
 
 [[package]]
 name = "pyflakes"
@@ -929,7 +961,7 @@ docs = ["Sphinx", "sphinx_bootstrap_theme"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "ac1bd0a966fed9f6b207632d18ba2c31cb9ffa4f981c15de50e3eab3aca9481e"
+content-hash = "d6516b9c1c2d0f0fda07bac3410379a850382e629939ea968812cfdb25a85159"
 
 [metadata.files]
 alabaster = [
@@ -939,6 +971,24 @@ alabaster = [
 appnope = [
     {file = "appnope-0.1.2-py2.py3-none-any.whl", hash = "sha256:93aa393e9d6c54c5cd570ccadd8edad61ea0c4b9ea7a01409020c9aa019eb442"},
     {file = "appnope-0.1.2.tar.gz", hash = "sha256:dd83cd4b5b460958838f6eb3000c660b1f9caf2a5b1de4264e941512f603258a"},
+]
+astropy = [
+    {file = "astropy-4.2.1-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:db694c10eb3cc10068859ba1eab30b38b7e821dbfff142960c5a99c4af059747"},
+    {file = "astropy-4.2.1-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:2ff194e15b03afd575f278e2187b71d7ee9d85f302356050b2257b6c4788f1cc"},
+    {file = "astropy-4.2.1-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:12c76c119f7a0a8fcf0e72269be9faa88319f12e4ba346180d910e58fda36bf2"},
+    {file = "astropy-4.2.1-cp37-cp37m-win32.whl", hash = "sha256:6d8c8bc1eef048ad873395d2a620b9b5f308bef9a508f542e6dc3b33fbfbe66d"},
+    {file = "astropy-4.2.1-cp37-cp37m-win_amd64.whl", hash = "sha256:3d5516ba20e6cbc208250dd8f414243839cc40e957616e3f336a517967ee34d0"},
+    {file = "astropy-4.2.1-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:c327cfdede8d5fce1224153b8d3a060226161ddc2e1b2170f076aaddb4953965"},
+    {file = "astropy-4.2.1-cp38-cp38-manylinux1_i686.whl", hash = "sha256:03428ca1baa4fba99e37d3767c12c038c456a27176bcb8f407f9b2b0743ef8ee"},
+    {file = "astropy-4.2.1-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:a6164013de3732a67a5a1a2743565f5aaef0d895ce33d5aef482d88b05318893"},
+    {file = "astropy-4.2.1-cp38-cp38-win32.whl", hash = "sha256:a1f707283822c2f7df97d9de151c29d49ed9cc0bf3ae952f91012d7a4c5872a7"},
+    {file = "astropy-4.2.1-cp38-cp38-win_amd64.whl", hash = "sha256:2035ca521d86c88ea6d8da07f977a9727f0d7d8f85b5c287558c1891f885e548"},
+    {file = "astropy-4.2.1-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:5be2f01d1b35202c0989f4502d25fe850ae5e891acbd3be107eaf6eeab81826d"},
+    {file = "astropy-4.2.1-cp39-cp39-manylinux1_i686.whl", hash = "sha256:009a26f795adad1f0b26ba3a434e5be9cfa82cb629ba87c0547b567bad6e1695"},
+    {file = "astropy-4.2.1-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:2d4d328892c7b09a23361f44182cf89be3dadaec60a270bd4fe754f3829052a4"},
+    {file = "astropy-4.2.1-cp39-cp39-win32.whl", hash = "sha256:09965d5e8ffd7e96e7fcc596b631f366cf729df75efb792918cb6637acf1ad4e"},
+    {file = "astropy-4.2.1-cp39-cp39-win_amd64.whl", hash = "sha256:223610cc612aaddac890fefd9e20dc6a39c92ef01692354e2bcb273c79fb8842"},
+    {file = "astropy-4.2.1.tar.gz", hash = "sha256:ed483e472241153daec45f4b0c318c2c63d9f47305b78e6e63d32fc388c18427"},
 ]
 atomicwrites = [
     {file = "atomicwrites-1.4.0-py2.py3-none-any.whl", hash = "sha256:6d1784dea7c0c8d4a5172b6c620f40b6e4cbfdf96d783691f2e1302a7b88e197"},
@@ -1284,6 +1334,37 @@ py = [
 pycodestyle = [
     {file = "pycodestyle-2.7.0-py2.py3-none-any.whl", hash = "sha256:514f76d918fcc0b55c6680472f0a37970994e07bbb80725808c17089be302068"},
     {file = "pycodestyle-2.7.0.tar.gz", hash = "sha256:c389c1d06bf7904078ca03399a4816f974a1d590090fecea0c63ec26ebaf1cef"},
+]
+pyerfa = [
+    {file = "pyerfa-1.7.3-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:34083499af3cf1dab5673bf287b0025cd66fc54838f46b0bcfa539c08907cef3"},
+    {file = "pyerfa-1.7.3-cp36-cp36m-manylinux1_i686.whl", hash = "sha256:8baf8a4904d415127bed0137207f1bbf5764e9c96b35a98147e3b9159e952c18"},
+    {file = "pyerfa-1.7.3-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:c8001f9a0c713d69d4dc837bb8d4dadc76385a51d639756150b8cd8c21f2f6db"},
+    {file = "pyerfa-1.7.3-cp36-cp36m-manylinux2010_i686.whl", hash = "sha256:8ff4866f71aed68d4ddc54bab25d87b9ae5872eae95e9f3f26f164e872744084"},
+    {file = "pyerfa-1.7.3-cp36-cp36m-manylinux2010_x86_64.whl", hash = "sha256:952bed5eeab094ccae87ffa4da3687244a11762561e686e5765d8cf49706fa73"},
+    {file = "pyerfa-1.7.3-cp36-cp36m-win32.whl", hash = "sha256:424e1b1d1c153014d8c945b6541a14df91d826f26f709b47ece0aabaff77f00c"},
+    {file = "pyerfa-1.7.3-cp36-cp36m-win_amd64.whl", hash = "sha256:3e31241d2e7ee28f74e4c27e31b69ca4f770c37787f33016599aadf865ab8b0e"},
+    {file = "pyerfa-1.7.3-cp37-cp37m-macosx_10_9_x86_64.whl", hash = "sha256:3d3fa11c322984a5c5adc35ca860a7321a7f6919c6ec4fdb37202c22dc3ea62f"},
+    {file = "pyerfa-1.7.3-cp37-cp37m-manylinux1_i686.whl", hash = "sha256:b5244f2440294f4299f97e4029717f3de3234dbd16c63f4e1f9f68e3c1efb47d"},
+    {file = "pyerfa-1.7.3-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:d6ae53d73863d3c65b949bcfdbdf4f62cca342346528e28a2b820c5a4615a10c"},
+    {file = "pyerfa-1.7.3-cp37-cp37m-manylinux2010_i686.whl", hash = "sha256:496197facb43c6e2074bba7fd91fe1c93c2e6519ee23f8b5673894587ae9401d"},
+    {file = "pyerfa-1.7.3-cp37-cp37m-manylinux2010_x86_64.whl", hash = "sha256:3d973f78244aaf9c4b3c8e12eed79d8471a67399811ce1e5e214bc741a97d52e"},
+    {file = "pyerfa-1.7.3-cp37-cp37m-win32.whl", hash = "sha256:cd29258530e8005ebee8fd77c69bf97af231f8b0ce8960f3617446b0394b7690"},
+    {file = "pyerfa-1.7.3-cp37-cp37m-win_amd64.whl", hash = "sha256:7a8eac2b30ca56d099a270a89e486d117efede516130daef4be1421d42213376"},
+    {file = "pyerfa-1.7.3-cp38-cp38-macosx_10_9_x86_64.whl", hash = "sha256:24932f31405cb3c29e3f4954af36bd2251ab968f382f3736cd885b046fa0c68d"},
+    {file = "pyerfa-1.7.3-cp38-cp38-manylinux1_i686.whl", hash = "sha256:20ec4b99a7ec45071c21ff938da4929090d3c3c9ba98faace62296c87a6fe804"},
+    {file = "pyerfa-1.7.3-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:3af5921651660c136fb1bbcec34d25a2621b0c8c985f1154c0941eb239f04dad"},
+    {file = "pyerfa-1.7.3-cp38-cp38-manylinux2010_i686.whl", hash = "sha256:b0bc078f6dacf3e169fc66b2a38de2f820388551317f4a86af54009c29eb5401"},
+    {file = "pyerfa-1.7.3-cp38-cp38-manylinux2010_x86_64.whl", hash = "sha256:83767b545c5f1bebf5fc7cbcf49da3bf106849f8daab3a92970e901fd4ba3771"},
+    {file = "pyerfa-1.7.3-cp38-cp38-win32.whl", hash = "sha256:7397ca80a1a72c5277d6e803a9bd8c535c7199afdf287fe48515026a429e5821"},
+    {file = "pyerfa-1.7.3-cp38-cp38-win_amd64.whl", hash = "sha256:b6f8d66439bc3c6f2366cafbbcb4d39467e95ecd3ebe901e8204c7886ed0dcbd"},
+    {file = "pyerfa-1.7.3-cp39-cp39-macosx_10_9_x86_64.whl", hash = "sha256:c65b889a41866d842877fb897b379c7a995a8f75e6a94a5ceed17ab24c7eb944"},
+    {file = "pyerfa-1.7.3-cp39-cp39-manylinux1_i686.whl", hash = "sha256:3dcdcf45e0a083df71ee0d6488effeac86f2fea1589f82dc7b850aed7fc8f74d"},
+    {file = "pyerfa-1.7.3-cp39-cp39-manylinux1_x86_64.whl", hash = "sha256:e64d5f08b30b62c80530620384894b3c3e0945ad178a47e3e2aec7001cf738c3"},
+    {file = "pyerfa-1.7.3-cp39-cp39-manylinux2010_i686.whl", hash = "sha256:d0b7d4f76d73ddb0aeeb06d51818335412e7e98da5469b1719d7eb91adeee70a"},
+    {file = "pyerfa-1.7.3-cp39-cp39-manylinux2010_x86_64.whl", hash = "sha256:d8c3e10f85d44f81432c72a6c38ca7f4880e708f741a46cdf24611462e8de9fa"},
+    {file = "pyerfa-1.7.3-cp39-cp39-win32.whl", hash = "sha256:280656b5c425ff911a8c33dd870606cca7541efdd4677783fc8e53374f3165e6"},
+    {file = "pyerfa-1.7.3-cp39-cp39-win_amd64.whl", hash = "sha256:0046fa759ce8e166d9f1bb9ee1dab521f691ce4f1c7ccc27347246c07b41d278"},
+    {file = "pyerfa-1.7.3.tar.gz", hash = "sha256:6cf3a645d63e0c575a357797903eac5d2c6591d7cdb89217c8c4d39777cf18cb"},
 ]
 pyflakes = [
     {file = "pyflakes-2.3.1-py2.py3-none-any.whl", hash = "sha256:7893783d01b8a89811dd72d7dfd4d84ff098e5eed95cfa8905b22bbffe52efc3"},
