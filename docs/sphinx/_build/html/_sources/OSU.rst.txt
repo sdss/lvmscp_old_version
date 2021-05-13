@@ -1,6 +1,6 @@
 .. _OSU:
 
-OSU actor
+OSU
 ============
 
 This section introduces the OSU actor.

@@ -41,7 +41,7 @@ This will start SCP but will not start the porting. For that you need to use ''c
 which will be responsible for implementing the protocol. Clu creates an actor and the actor processes pre-defined tasks.
 SCP is composed of OSU actor, NPS actor, and Archon actor. Each actor controls and manages hardware connected with Controller.
 
-You can learn more about the archon `here <https://sdss-archon.readthedocs.io/en/latest/>`.
+You can learn more about the archon `here <https://sdss-archon.readthedocs.io/en/latest/>`_.
 
 Actor
 --------

@@ -2,8 +2,8 @@
 .. _Archon:
 
 
-Archon actor
+Archon
 =======================
 
-`Archon's documentation  <https://sdss-archon.readthedocs.io/en/latest/>`
+You can learn more about Archon in `Archon's documentation  <https://sdss-archon.readthedocs.io/en/latest/>`_
 
