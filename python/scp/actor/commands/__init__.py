@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # @Author: Changgon Kim, Taeeun Kim, Mingyeong YANG (mingyeong@khu.ac.kr)
@@ -12,7 +12,7 @@ import os
 import warnings
 
 import click
-from clu.parser import CluGroup, help_, ping, version
+from clu.parsers.click import CluGroup, help_, ping, version
 
 from scp.exceptions import SCPUserWarning
 
