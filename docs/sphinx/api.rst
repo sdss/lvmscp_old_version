@@ -4,12 +4,11 @@
 API Reference
 ==================
 
-.. _api-main:
 
 Actor
 -------
 
-.. automodule:: scp.actor.actor
+.. automodule:: SCP.actor.actor
    :members:
    :undoc-members:
    :show-inheritance:
@@ -17,7 +16,7 @@ Actor
 commands
 -----------
 
-.. automodule:: scp.actor.commands
+.. automodule:: SCP.actor.commands
    :members:
    :undoc-members:
    :show-inheritance:

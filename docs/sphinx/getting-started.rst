@@ -20,7 +20,7 @@ Hardware Component
     
 Here is the Hardware and Software Component Architecture diagram in spectrograph.
 
-.. image:: tatic/HW__conf_20210506_LCO.png
+.. image:: _static/HW__conf_20210506_LCO.png
     :align: center
 
 
@@ -46,11 +46,11 @@ You can learn more about the archon `here <https://sdss-archon.readthedocs.io/en
 Actor
 --------
 
-Archon Actor::
+Archon Actor
 
-OSU Actor::
+OSU Actor
 
-NPS Actor::
+NPS Actor
 
 
 
