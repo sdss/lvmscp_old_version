@@ -13,14 +13,14 @@ Contents
 .. toctree::
    :maxdepth: 2
 
-  Getting started with SCP
+  getting-started
   SCP
   OSU
   NPS
   Archon
-  Testing with SCP
-  API Reference
-  Changelog
+  testing
+  api
+  changelog
 
 
 Indices and tables
