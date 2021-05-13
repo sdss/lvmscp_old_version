@@ -8,7 +8,7 @@ API Reference
 Actor
 -------
 
-.. automodule:: SCP.actor.actor
+.. automodule:: scp.actor.actor
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,7 +16,7 @@ Actor
 commands
 -----------
 
-.. automodule:: SCP.actor.commands
+.. automodule:: scp.actor.commands
    :members:
    :undoc-members:
    :show-inheritance:
