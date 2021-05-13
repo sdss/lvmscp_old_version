@@ -1,0 +1,167 @@
+
+
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Getting started with SCP &#8212; SCP  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="SCP" href="SCP.html" />
+    <link rel="prev" title="SCP’s documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="getting-started-with-scp">
+<span id="getting-started"></span><h1>Getting started with SCP<a class="headerlink" href="#getting-started-with-scp" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>In this section we provide a qiuck introduction to SCP. We assume that you are comfortable with aynchronous programming and ‘asyncio’. SCP (Spectrograph Control Package) is a software that controls the spectrograph in SDSS-V LVMi project. SCP is composed of code based on sdss software framework. Among them, ‘sdss-clu’ is applied to create an actor that controls each hardware and executes communication.</p>
+<p>In ‘CLU’, We’’’ define what an <em>actor</em> is: and actor is a piece of software that performs a well defined task (control a CCD camera, interface with a database) and is a <em>server</em> that receives <em>commands</em> and replies with a series of <em>keywords</em>. If you are not familiar with those concepts, the <a class="reference external" href="https://clu.readthedocs.io/en/latest/index.html">CLU’s documentation</a> is a good reference place.</p>
+<p>We will expand on these concepts in following sections.</p>
+</div>
+<div class="section" id="hardware-component">
+<h2>Hardware Component<a class="headerlink" href="#hardware-component" title="Permalink to this headline">¶</a></h2>
+<p>Here is the Hardware and Software Component Architecture diagram in spectrograph.</p>
+<img alt="_images/HW__conf_20210506_LCO.png" class="align-center" src="_images/HW__conf_20210506_LCO.png" />
+</div>
+<div class="section" id="running-an-scp">
+<span id="running-scp"></span><h2>Running an SCP<a class="headerlink" href="#running-an-scp" title="Permalink to this headline">¶</a></h2>
+<p>SCP can be started by simply ‘SCP start’ command</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">SCP</span> <span class="n">start</span>
+</pre></div>
+</div>
+<p>This will start SCP but will not start the porting. For that you need to use ‘’clu’’ command.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">clu</span>
+</pre></div>
+</div>
+<p>which will be responsible for implementing the protocol. Clu creates an actor and the actor processes pre-defined tasks.
+SCP is composed of OSU actor, NPS actor, and Archon actor. Each actor controls and manages hardware connected with Controller.</p>
+<p>You can learn more about the archon <code class="xref py py-obj docutils literal notranslate"><span class="pre">here</span></code>.</p>
+</div>
+<div class="section" id="actor">
+<h2>Actor<a class="headerlink" href="#actor" title="Permalink to this headline">¶</a></h2>
+<p>Archon Actor</p>
+<p>OSU Actor</p>
+<p>NPS Actor</p>
+</div>
+<div class="section" id="configuration-files">
+<h2>Configuration files<a class="headerlink" href="#configuration-files" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<p class="logo">
+  <a href="index.html">
+    <img class="logo" src="_static/sdssv_logo.png" alt="Logo"/>
+    
+  </a>
+</p>
+
+
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=sdss&repo=SCP&type=star&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Getting started with SCP</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#hardware-component">Hardware Component</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#running-an-scp">Running an SCP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#actor">Actor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#configuration-files">Configuration files</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="SCP.html">SCP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OSU.html">OSU actor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NPS.html">NPS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Archon.html">Archon actor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing with SCP</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Change Log</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">SCP’s documentation</a></li>
+      <li>Next: <a href="SCP.html" title="next chapter">SCP</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2021, SDSS LVMI softwareteam in Kyung Hee university.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.0.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/getting-started.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+    <a href="https://github.com/sdss/SCP" class="github">
+        <img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"  class="github"/>
+    </a>
+    
+
+    
+  </body>
+</html>
