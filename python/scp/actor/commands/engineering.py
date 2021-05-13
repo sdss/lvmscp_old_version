@@ -37,60 +37,14 @@ async def engineering(command, exptime: float, count: int, flavour: str):
     elif flavour == "bias":
         exposure_time = 0.0
 
-    #Check that the actor is running
-    """ 
-    client = AMQPClient(
-        "SCP",
-        host= "localhost",
-        port= 5672,
-        models=["archon"],
-    )
-    await client.start()
-    if len(client.models) == 0:
-        command.fail(text="Archon actor does not seem to be running. Run with 'archon start'")
-
-    model = client.models["archon"]
-    """
     command.info(text="Starting the exposure.")
 
     # Check that the configuration has been loaded.
 
     cmd = await (await command.actor.send_command("archon", "status"))
     if cmd.status.did_fail:
-        #log.error("Failed getting status from the controller.")
         command.fail(text="Failed getting status from the controller")
-    """
-    #status = await get_controller_status(client)
-    if status.did_fail != True:
-        #log.warning("Archon has not been initialised. Sending configuration file.")
-        cmd = await (await command.actor.send_command("archon", "init"))
-        if cmd.status.did_fail:
-            #log.error("Failed initialising the Archon.")
-            command.fail(text="Failed initialising the Archon.")
-    """
-    """
-    # Check if the shutter responds and is closed
-    shutter_check_cmd = await command.actor.send_command("OsuActor", "check")
-    
-    await shutter_check_cmd  # Block until the command is done (finished or failed)
-    if shutter_check_cmd.status.did_fail:
-        # Do cleanup
-        return command.fail(text="failed to receive shutter status")
-    """
-    """
-    # If there is a readout pending, flush the camera.
-    if status & CS.READOUT_PENDING:
-        log.warning("Pending readout found. Aborting and flushing.")
-        if status & CS.EXPOSING:
-            cmd_str = "expose abort --all --flush"
-        else:
-            cmd_str = "flush"
-        cmd = await (await client.send_command("archon", cmd_str))
-        if cmd.status.did_fail:
-            log.error("Failed flushing.")
-            sys.exit(1)
-    """
-    
+
     """
     #Check the power of the devices
     command.info(text="power checking...")
@@ -107,14 +61,14 @@ async def engineering(command, exptime: float, count: int, flavour: str):
         command.info(f"Taking exposure {nn + 1} of {count}.")
 
         # Read pressure.
-        #log.debug("Reading pressure transducer.")
         pressure = await send_message("@253P?\\")
-        command.info("pressure data received")
+        #command.info(pres = pressure)
 
         # Build extra header.
         header = {"PRESSURE": (pressure, "Spectrograph pressure [torr]")}
         header_json = json.dumps(header, indent=None)
-        command.info("added header")
+        #command.info("added header")
+
         # Flushing
         flush_count = 1
         if flush_count > 0:
@@ -130,17 +84,16 @@ async def engineering(command, exptime: float, count: int, flavour: str):
             )
         )
         if cmd.status.did_fail:
-            #log.error("Failed starting exposure. Trying to abort and exiting.")
             await command.actor.send_command("archon", "expose abort --flush")
             command.fail(text = "Failed starting exposure. Trying to abort and exiting.")
 
         if flavour != "bias" and exptime > 0:
             # Use command to access the actor and command the shutter
-            shutter_cmd = await command.actor.send_command("OsuActor", "open")
+            shutter_cmd = await command.actor.send_command("OsuActor", "shutter --send open")
 
             await shutter_cmd  # Block until the command is done (finished or failed)
             if shutter_cmd.status.did_fail:
-                await command.actor.send_command("OsuACtor", "close")
+                await command.actor.send_command("OsuACtor", "shutter --send close")
                 await command.actor.send_command("archon", "expose abort --flush")
                 return command.fail(text="Shutter failed to open")
             
@@ -155,83 +108,6 @@ async def engineering(command, exptime: float, count: int, flavour: str):
             if not (await asyncio.create_task(close_shutter_after(command, exptime))):
                 await command.actor.send_command("archon", "expose abort --flush")
                 command.fail(text = "Failed to close the shutter")
-            
-            """
-            #log.debug("Opening shutter.")
-            #result = await command_shutter("QX3")
-            if result is False:
-                log.error("Shutter failed to open.")
-                await command_shutter("QX4")
-                await client.send_command("archon", "expose abort --flush")
-                sys.exit(1)
-
-            if not (await asyncio.create_task(close_shutter_after(exposure_time))):
-                await client.send_command("archon", "expose abort --flush")
-                sys.exit(1)
-            """
-
-        # Finish exposure
-        command.info("Finishing exposure and reading out.")
-        
-        delay_readout = 0
-        if delay_readout > 0:
-            command.info(f"Readout will be delayed {delay_readout} seconds.")
-
-        cmd = await (
-            await command.actor.send_command(
-                "archon",
-                f"expose finish --delay-readout {delay_readout} "
-                f"--header '{header_json}'",
-            )
-        )
-        if cmd.status.did_fail:
-            command.fail(text="Failed reading out exposure.")
-
-        #exp_name = model["filename"].value
-
-    """
-    #receive pressure data from the pressure transcducer
-    
-    pres = await send_message("@253P?\\")
-    temp = await send_message("@253T?\\")
-    command.info(text=f"transducer pressure : {pres!r}")
-    command.info(text=f"transducer temperature: {temp!r}")
-
-    #send archon command
-    await (await command.actor.send_command("archon", f"expose start {exptime} --object"))
-
-    # Use command to access the actor and command the shutter
-    shutter_cmd = await command.actor.send_command("OsuActor", "open")
-
-    await shutter_cmd  # Block until the command is done (finished or failed)
-    if shutter_cmd.status.did_fail:
-        # Do cleanup
-        return command.fail(text="Shutter failed to open")
-
-    # Report status of the shutter
-    replies = shutter_cmd.replies
-    shutter_status = replies[-1].body["shutter"]
-    if shutter_status not in ["open", "closed"]:
-        return command.fail(text=f"Unknown shutter status {shutter_status!r}.")
-
-    command.info(f"Shutter is now {shutter_status!r}.")
-
-    # Sleep until the exposure is complete.
-    command.info(text="exposing by archon...")
-    await asyncio.sleep(exptime)
-
-    # Close the shutter. Note the double await.
-    await (await command.actor.send_command("OsuActor", "close"))
-
-    await (await command.actor.send_command("archon", "expose finish"))
-
-    # Add fits header
-
-
-
-    # Finish exposure, read buffer, etc.
-    """
-
 
     return command.finish(text="Engineering sequence done!")
 
@@ -262,13 +138,13 @@ async def receive_status(areader):
 async def close_shutter_after(command, delay: float):
     """Waits ``delay`` before closing the shutter."""
 
+    command.info(text = "exposing . . .")
     await asyncio.sleep(delay)
 
-    #log.debug("Closing shutter")
 
-    result = await command.actor.send_command("OsuActor", "close")
+    result = await command.actor.send_command("OsuActor", "shutter --send close")
     if result is False:
         command.fail(text="Shutter failed to close.")
         return False
-
+    command.info(text=f"shutter is now closed")
     return True

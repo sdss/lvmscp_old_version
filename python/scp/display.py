@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 
-folder = '59344'
+folder = '59345'
 path = '/data/spectro/lvm/' + folder + '/'
 
 for file in os.listdir(path):
