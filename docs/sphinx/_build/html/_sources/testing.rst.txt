@@ -10,7 +10,7 @@ SCP provides the control system to manage spectrograph. A typical example is as 
 
 
 API
-----
+~~~~~~
 
 .. toctree::
    :maxdepth: 2
