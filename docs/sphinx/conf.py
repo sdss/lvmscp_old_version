@@ -11,10 +11,18 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-#import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import sys
+
+sys.path.insert(0, '/home/khu/mingyeong/workspace/SCP/python/scp')  
 
 from pkg_resources import parse_version
+
+try:
+    from scp import __version__
+except ModuleNotFoundError:
+    from sdsstools import get_package_version
+
+    __version__ = get_package_version(__file__, "sdss-SCP") or "dev"
 
 # -- Project information -----------------------------------------------------
 
@@ -24,7 +32,7 @@ author = "Changgon Kim, Mingyeong Yang, Taeeun Kim"
 
 # The full version, including alpha/beta/rc tags
 version = parse_version(__version__).base_version
-release = __version__
+realese = __version__
 
 # Are we building in RTD?
 on_rtd = os.environ.get("READTHEDOCS") == "True"
