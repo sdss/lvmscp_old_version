@@ -6,6 +6,6 @@
 
 # Actor configuration for the AMQPActor class
 actor:
-  name: SCP
+  name: scp
   host: localhost
   port: 5672

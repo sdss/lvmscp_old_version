@@ -1,4 +1,4 @@
-# encoding: utf-8
+#encoding: utf-8
 #
 #added by CK 2021/04/06
 
@@ -36,7 +36,7 @@ from scp.actor.actor import SCPActor as SCPActorInstance
 )
 @click.pass_context
 def SCPActor(ctx, config_file, verbose):
-    """SCP"""
+    """scp"""
 
 #    ctx.obj = {"verbose": verbose, "config_file": config_file}
 
@@ -46,7 +46,7 @@ def SCPActor(ctx, config_file, verbose):
 @cli_coro_scp
 async def actor(ctx):
     """Runs the actor."""
-    default_config_file = os.path.join(os.path.dirname(__file__), "etc/SCP.yml")
+    default_config_file = os.path.join(os.path.dirname(__file__), "etc/scp.yml")
 #    config_file = ctx.obj["config_file"] or default_config_file
 
     scpactor_obj = SCPActorInstance.from_config(default_config_file)
