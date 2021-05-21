@@ -1,4 +1,4 @@
-This is the documentation for the SDSS Python product SCP. The current version is |SCP_version|. You can install the package by doing
+This is the documentation for the SDSS Python product SCP. The current version is (Not Yet). You can install the package by doing
 
 .. code-block:: console
 

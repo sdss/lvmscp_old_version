@@ -4,6 +4,7 @@
 API Reference
 ==================
 
+.. _api-scp:
 
 Actor
 -------

@@ -13,7 +13,7 @@
 import os
 import sys
 
-sys.path.insert(0, '/home/khu/mingyeong/workspace/SCP/python/scp')  
+sys.path.insert(0, os.path.abspath('..'))
 
 from pkg_resources import parse_version
 
@@ -22,11 +22,11 @@ try:
 except ModuleNotFoundError:
     from sdsstools import get_package_version
 
-    __version__ = get_package_version(__file__, "sdss-SCP") or "dev"
+    __version__ = get_package_version(__file__, "sdss-scp") or "dev"
 
 # -- Project information -----------------------------------------------------
 
-project = "SCP"
+project = "scp"
 copyright = "{0}, {1}".format("2021", "SDSS LVMI softwareteam in Kyung Hee university")
 author = "Changgon Kim, Mingyeong Yang, Taeeun Kim"
 
@@ -98,7 +98,7 @@ pygments_style = "sphinx"
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-releases_github_path = "sdss/SCP"
+releases_github_path = "sdss/scp"
 releases_document_name = ["changelog"]
 releases_unstable_prehistory = True
 
