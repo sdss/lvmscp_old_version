@@ -11,20 +11,28 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-#import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import sys
+
+sys.path.insert(0, os.path.abspath('..'))
 
 from pkg_resources import parse_version
 
+try:
+    from scp import __version__
+except ModuleNotFoundError:
+    from sdsstools import get_package_version
+
+    __version__ = get_package_version(__file__, "sdss-scp") or "dev"
+
 # -- Project information -----------------------------------------------------
 
-project = "SCP"
+project = "scp"
 copyright = "{0}, {1}".format("2021", "SDSS LVMI softwareteam in Kyung Hee university")
 author = "Changgon Kim, Mingyeong Yang, Taeeun Kim"
 
 # The full version, including alpha/beta/rc tags
 version = parse_version(__version__).base_version
-release = __version__
+realese = __version__
 
 # Are we building in RTD?
 on_rtd = os.environ.get("READTHEDOCS") == "True"
@@ -90,7 +98,7 @@ pygments_style = "sphinx"
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-releases_github_path = "sdss/SCP"
+releases_github_path = "sdss/scp"
 releases_document_name = ["changelog"]
 releases_unstable_prehistory = True
 

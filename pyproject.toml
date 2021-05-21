@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "sdss-SCP"
+name = "sdss-scp"
 version = "0.1.0-alpha.0"
 description = "Simple Template package for creating SDSS Python projects"
 authors = ["Changgon Kim <changgonkim@khu.ac.kr>"]
 license = "BSD-3-Clause"
 readme = "README.md"
-homepage = "https://github.com/sdss/SCP"
-repository = "https://github.com/sdss/SCP"
-documentation = "https://sdss-SCP.readthedocs.org"
+homepage = "https://github.com/sdss/scp"
+repository = "https://github.com/sdss/scp"
+documentation = "https://sdss-scp.readthedocs.org"
 keywords = ["astronomy", "software"]
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -20,16 +20,16 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 packages = [
-    { include = "SCP", from = "python" }
+    { include = "scp", from = "python" }
 ]
-include = ["python/SCP/etc/*", "cextern/**/*", "LICENSE.md"]
+include = ["python/scp/etc/*", "cextern/**/*", "LICENSE.md"]
 
 [tool.poetry.build]
 script = "build.py"
 generate-setup-file = false
 
 [tool.poetry.scripts]
-SCP = "SCP.__main__:main"
+scp = "scp.__main__:main"
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -68,7 +68,7 @@ docs = ["Sphinx", "sphinx_bootstrap_theme"]
 line_length = 79
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "SDSS", "FIRSTPARTY", "LOCALFOLDER"]
 default_section = "THIRDPARTY"
-known_first_party = "SCP"
+known_first_party = "scp"
 known_sdss = ["sdsstools"]
 balanced_wrapping = true
 include_trailing_comma = false
@@ -76,11 +76,11 @@ lines_after_imports = 2
 use_parentheses = true
 
 [tool.pytest.ini_options]
-addopts = "--cov SCP --cov-report xml --cov-report html --cov-report term"
+addopts = "--cov scp --cov-report xml --cov-report html --cov-report term"
 
 [tool.coverage.run]
 branch = true
-include = ["python/SCP/*"]
+include = ["python/scp/*"]
 omit = [
     "*/__init__.py",
 ]
