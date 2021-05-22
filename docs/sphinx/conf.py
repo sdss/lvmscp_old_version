@@ -13,20 +13,21 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('..'))
+sys.path.append('/home/khu/changgon/workspace/scpactor/scpactor/python/scpactor')
+#sys.path.insert(0, os.path.abspath('..'))
 
 from pkg_resources import parse_version
 
 try:
-    from scp import __version__
+    from scpactor import __version__
 except ModuleNotFoundError:
     from sdsstools import get_package_version
 
-    __version__ = get_package_version(__file__, "sdss-scp") or "dev"
+    __version__ = get_package_version(__file__, "scpactor") or "dev"
 
 # -- Project information -----------------------------------------------------
 
-project = "scp"
+project = "scpactor"
 copyright = "{0}, {1}".format("2021", "SDSS LVMI softwareteam in Kyung Hee university")
 author = "Changgon Kim, Mingyeong Yang, Taeeun Kim"
 
@@ -36,6 +37,13 @@ realese = __version__
 
 # Are we building in RTD?
 on_rtd = os.environ.get("READTHEDOCS") == "True"
+
+#sphinx template selected in cookiecutter
+sphinx_template = 'alabaster'
+
+if sphinx_template == "sphinx_bootstrap":
+    import sphinx_bootstrap_theme
+
 
 # -- General configuration ---------------------------------------------------
 
@@ -98,7 +106,7 @@ pygments_style = "sphinx"
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-releases_github_path = "sdss/scp"
+releases_github_path = "sdss/scpactor"
 releases_document_name = ["changelog"]
 releases_unstable_prehistory = True
 
@@ -114,7 +122,7 @@ intersphinx_mapping = {
 # 'matplotlib': ('https://matplotlib.org/', None),
 # 'scipy': ('https://docs.scipy.org/doc/scipy/reference', None)}
 
-autodoc_mock_imports = ["_tkinter", "asynctest"]
+autodoc_mock_imports = ["_tkinter", "asynctest", "sdss-scpactor"]
 autodoc_member_order = "groupwise"
 autodoc_default_options = {"members": None, "show-inheritance": None}
 autodoc_typehints = "description"
@@ -135,7 +143,7 @@ html_theme = 'alabaster'
 html_theme_options = {
     "logo": "sdssv_logo.png",
     "github_user": "sdss",
-    "github_repo": "SCP",
+    "github_repo": "scpactor",
     "github_button": True,
     "github_type": "star",
     "sidebar_collapse": True,

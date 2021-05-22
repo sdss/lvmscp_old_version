@@ -80,7 +80,7 @@ async def engineering(command, exptime: float, count: int, flavour: str):
         cmd = await (
             await command.actor.send_command(
                 "archon",
-                f"expose start sp1 --{flavour} {exptime}",
+                f"expose start --{flavour} {exptime}",
             )
         )
         if cmd.status.did_fail:
@@ -89,11 +89,11 @@ async def engineering(command, exptime: float, count: int, flavour: str):
 
         if flavour != "bias" and exptime > 0:
             # Use command to access the actor and command the shutter
-            shutter_cmd = await command.actor.send_command("OsuActor", "shutter --send open")
+            shutter_cmd = await command.actor.send_command("osuactor", "shutter open")
 
             await shutter_cmd  # Block until the command is done (finished or failed)
             if shutter_cmd.status.did_fail:
-                await command.actor.send_command("OsuACtor", "shutter --send close")
+                await command.actor.send_command("osuactor", "shutter close")
                 await command.actor.send_command("archon", "expose abort --flush")
                 return command.fail(text="Shutter failed to open")
             
@@ -108,7 +108,17 @@ async def engineering(command, exptime: float, count: int, flavour: str):
             if not (await asyncio.create_task(close_shutter_after(command, exptime))):
                 await command.actor.send_command("archon", "expose abort --flush")
                 command.fail(text = "Failed to close the shutter")
-
+    
+        # Finish exposure
+        cmd = await (
+            await command.actor.send_command(
+            "archon",
+            f"expose finish",
+            f"--header '{header_json}'",
+            )
+        )
+        if cmd.status.did_fail:
+            command.fail(text=f"Failed reading out exposure")
     return command.finish(text="Engineering sequence done!")
 
 async def send_message(message):
@@ -142,7 +152,7 @@ async def close_shutter_after(command, delay: float):
     await asyncio.sleep(delay)
 
 
-    result = await command.actor.send_command("OsuActor", "shutter --send close")
+    result = await command.actor.send_command("osuactor", "shutter close")
     if result is False:
         command.fail(text="Shutter failed to close.")
         return False

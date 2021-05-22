@@ -9,7 +9,7 @@ API Reference
 Actor
 -------
 
-.. automodule:: scp.actor.actor
+.. automodule:: scpactor.actor.actor
    :members:
    :undoc-members:
    :show-inheritance:
@@ -17,7 +17,7 @@ Actor
 commands
 -----------
 
-.. automodule:: scp.actor.commands
+.. automodule:: scpactor.actor.command
    :members:
    :undoc-members:
    :show-inheritance:
