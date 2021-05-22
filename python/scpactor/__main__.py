@@ -17,7 +17,7 @@ from clu.tools import cli_coro as cli_coro_scp
 
 from sdsstools.daemonizer import DaemonGroup
 
-from scp.actor.actor import SCPActor as SCPActorInstance
+from scpactor.actor.actor import scpactor as SCPActorInstance
 
 
 @click.group(cls=DefaultGroup, default="actor", default_if_no_args=True)
@@ -35,18 +35,18 @@ from scp.actor.actor import SCPActor as SCPActorInstance
     help="Debug mode. Use additional v for more details.",
 )
 @click.pass_context
-def SCPActor(ctx, config_file, verbose):
+def scpactor(ctx, config_file, verbose):
     """scp"""
 
 #    ctx.obj = {"verbose": verbose, "config_file": config_file}
 
 
-@SCPActor.group(cls=DaemonGroup, prog="scp_actor", workdir=os.getcwd())
+@scpactor.group(cls=DaemonGroup, prog="scp_actor", workdir=os.getcwd())
 @click.pass_context
 @cli_coro_scp
 async def actor(ctx):
     """Runs the actor."""
-    default_config_file = os.path.join(os.path.dirname(__file__), "etc/scp.yml")
+    default_config_file = os.path.join(os.path.dirname(__file__), "etc/scpactor.yml")
 #    config_file = ctx.obj["config_file"] or default_config_file
 
     scpactor_obj = SCPActorInstance.from_config(default_config_file)
@@ -60,4 +60,4 @@ async def actor(ctx):
 
 
 if __name__ == "__main__":
-    SCPActor()
+    scpactor()

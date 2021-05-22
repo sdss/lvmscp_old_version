@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "sdss-scp"
+name = "sdss-scpactor"
 version = "0.1.0-alpha.0"
 description = "Simple Template package for creating SDSS Python projects"
 authors = ["Changgon Kim <changgonkim@khu.ac.kr>"]
 license = "BSD-3-Clause"
 readme = "README.md"
-homepage = "https://github.com/sdss/scp"
-repository = "https://github.com/sdss/scp"
-documentation = "https://sdss-scp.readthedocs.org"
+homepage = "https://github.com/sdss/scpactor"
+repository = "https://github.com/sdss/scpactor"
+documentation = "https://sdss-scpactor.readthedocs.org"
 keywords = ["astronomy", "software"]
 classifiers = [
     "Intended Audience :: Science/Research",
@@ -20,16 +20,16 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 packages = [
-    { include = "scp", from = "python" }
+    { include = "scpactor", from = "python" }
 ]
-include = ["python/scp/etc/*", "cextern/**/*", "LICENSE.md"]
+include = ["python/scpactor/etc/*", "cextern/**/*", "LICENSE.md"]
 
 [tool.poetry.build]
 script = "build.py"
 generate-setup-file = false
 
 [tool.poetry.scripts]
-scp = "scp.__main__:main"
+scpactor = "scpactor.__main__:scpactor"
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -43,7 +43,6 @@ click = "^8.0.0"
 click-default-group = "^1.2.2"
 sdss-clu = "^1.0.0"
 daemonocle = "^1.2.3"
-clu = "^0.0.3"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=7.11.0"
@@ -68,7 +67,7 @@ docs = ["Sphinx", "sphinx_bootstrap_theme"]
 line_length = 79
 sections = ["FUTURE", "STDLIB", "THIRDPARTY", "SDSS", "FIRSTPARTY", "LOCALFOLDER"]
 default_section = "THIRDPARTY"
-known_first_party = "scp"
+known_first_party = "scpactor"
 known_sdss = ["sdsstools"]
 balanced_wrapping = true
 include_trailing_comma = false
@@ -76,11 +75,11 @@ lines_after_imports = 2
 use_parentheses = true
 
 [tool.pytest.ini_options]
-addopts = "--cov scp --cov-report xml --cov-report html --cov-report term"
+addopts = "--cov scpactor --cov-report xml --cov-report html --cov-report term"
 
 [tool.coverage.run]
 branch = true
-include = ["python/scp/*"]
+include = ["python/scpactor/*"]
 omit = [
     "*/__init__.py",
 ]

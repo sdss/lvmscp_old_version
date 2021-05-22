@@ -17,9 +17,9 @@ from clu.actor import AMQPActor
 
 from .commands import parser as SCP_command_parser
 
-__all__ = ["SCPActor"]
+__all__ = ["scpactor"]
 
-class SCPActor(AMQPActor):
+class scpactor(AMQPActor):
     """SCP controller actor.
     In addition to the normal arguments and keyword parameters for
     `~clu.actor.AMQPActor`, the class accepts the following parameters.
