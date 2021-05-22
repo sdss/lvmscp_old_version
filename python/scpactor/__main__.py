@@ -13,7 +13,7 @@ import os
 import asyncio
 import click
 from click_default_group import DefaultGroup
-from clu.tools import cli_coro as cli_coro_scp
+from clu.tools import cli_coro as cli_coro_scpactor
 
 from sdsstools.daemonizer import DaemonGroup
 
@@ -43,7 +43,7 @@ def scpactor(ctx, config_file, verbose):
 
 @scpactor.group(cls=DaemonGroup, prog="scp_actor", workdir=os.getcwd())
 @click.pass_context
-@cli_coro_scp
+@cli_coro_scpactor
 async def actor(ctx):
     """Runs the actor."""
     default_config_file = os.path.join(os.path.dirname(__file__), "etc/scpactor.yml")
