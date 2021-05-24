@@ -17,7 +17,7 @@ Actor
 commands
 -----------
 
-.. automodule:: scpactor.actor.command
+.. automodule:: scpactor.actor.commands
    :members:
    :undoc-members:
    :show-inheritance:
