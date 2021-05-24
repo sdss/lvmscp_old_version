@@ -13,7 +13,7 @@
 import os
 import sys
 
-sys.path.append('/home/khu/changgon/workspace/scpactor/scpactor/python/scpactor')
+#sys.path.append('/home/khu/changgon/workspace/scpactor/scpactor/python/scpactor')
 #sys.path.insert(0, os.path.abspath('..'))
 
 from pkg_resources import parse_version
