@@ -6,6 +6,7 @@ API Reference
 
 .. _api-scp:
 
+
 Actor
 -------
 
@@ -17,7 +18,9 @@ Actor
 commands
 -----------
 
-.. automodule:: scpactor.actor.command
-   :members:
-   :undoc-members:
-   :show-inheritance:
+The ``scp`` actor replies to the following commands.  
+
+.. click:: scpactor.actor.commands:parser
+   :prog: scpactor
+   :show-nested:
+
