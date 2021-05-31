@@ -14,7 +14,7 @@ import warnings
 import click
 from clu.parsers.click import CluGroup, help_, ping, version
 
-from scpactor.exceptions import SCPUserWarning
+from lvmscp.exceptions import SCPUserWarning
 
 
 @click.group(cls=CluGroup)
@@ -39,7 +39,7 @@ files = [
 
 for file_ in files:
     modname = file_[0:-3].replace("/", ".")
-    mod = importlib.import_module("scpactor.actor.commands." + modname) #changged by CK 2021/03/30
+    mod = importlib.import_module("lvmscp.actor.commands." + modname) #changged by CK 2021/03/30
 
 os.chdir(cwd)
 

@@ -13,11 +13,11 @@ import os
 import asyncio
 import click
 from click_default_group import DefaultGroup
-from clu.tools import cli_coro as cli_coro_scpactor
+from clu.tools import cli_coro as cli_coro_lvmscp
 
 from sdsstools.daemonizer import DaemonGroup
 
-from scpactor.actor.actor import scpactor as SCPActorInstance
+from lvmscp.actor.actor import lvmscp as SCPActorInstance
 
 
 @click.group(cls=DefaultGroup, default="actor", default_if_no_args=True)
@@ -35,29 +35,29 @@ from scpactor.actor.actor import scpactor as SCPActorInstance
     help="Debug mode. Use additional v for more details.",
 )
 @click.pass_context
-def scpactor(ctx, config_file, verbose):
+def lvmscp(ctx, config_file, verbose):
     """scp"""
+    
+    ctx.obj = {"verbose": verbose, "config_file": config_file}
 
-#    ctx.obj = {"verbose": verbose, "config_file": config_file}
 
-
-@scpactor.group(cls=DaemonGroup, prog="scp_actor", workdir=os.getcwd())
+@lvmscp.group(cls=DaemonGroup, prog="scp_actor", workdir=os.getcwd())
 @click.pass_context
-@cli_coro_scpactor
+@cli_coro_lvmscp
 async def actor(ctx):
     """Runs the actor."""
-    default_config_file = os.path.join(os.path.dirname(__file__), "etc/scpactor.yml")
-#    config_file = ctx.obj["config_file"] or default_config_file
+    default_config_file = os.path.join(os.path.dirname(__file__), "etc/lvmscp.yml")
+    config_file = ctx.obj["config_file"] or default_config_file
 
-    scpactor_obj = SCPActorInstance.from_config(default_config_file)
+    lvmscp_obj = SCPActorInstance.from_config(default_config_file)
 
 #    if ctx.obj["verbose"]:
 #        scpactor_obj.log.fh.setLevel(0)
 #        scpactor_obj.log.sh.setLevel(0)
 
-    await scpactor_obj.start()
-    await scpactor_obj.run_forever()
+    await lvmscp_obj.start()
+    await lvmscp_obj.run_forever()
 
 
 if __name__ == "__main__":
-    scpactor()
+    lvmscp()
