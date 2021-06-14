@@ -29,7 +29,7 @@ from clu.client import AMQPClient
     help="object, dark, or bias.",
 )
 @click.argument("EXPTIME", type=float)
-async def engineering(command, exptime: float, count: int, flavour: str):
+async def exposure(command, exptime: float, count: int, flavour: str):
     """Exposes the camera."""
 
     if flavour != "bias" and exptime is None:
@@ -89,11 +89,11 @@ async def engineering(command, exptime: float, count: int, flavour: str):
 
         if flavour != "bias" and exptime > 0:
             # Use command to access the actor and command the shutter
-            shutter_cmd = await command.actor.send_command("osuactor", "shutter open")
+            shutter_cmd = await command.actor.send_command("lvmieb", "shutter open")
 
             await shutter_cmd  # Block until the command is done (finished or failed)
             if shutter_cmd.status.did_fail:
-                await command.actor.send_command("osuactor", "shutter close")
+                await command.actor.send_command("lvmieb", "shutter close")
                 await command.actor.send_command("archon", "expose abort --flush")
                 return command.fail(text="Shutter failed to open")
             
@@ -152,7 +152,7 @@ async def close_shutter_after(command, delay: float):
     await asyncio.sleep(delay)
 
 
-    result = await command.actor.send_command("osuactor", "shutter close")
+    result = await command.actor.send_command("lvmieb", "shutter close")
     if result is False:
         command.fail(text="Shutter failed to close.")
         return False
