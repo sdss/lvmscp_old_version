@@ -1,8 +1,4 @@
 # A dictionary of controller name to Spectrograph controller package connection parameters.
-#controllers:
-#  sp1:
-#    host: 10.7.45.27
-#    port: 4242
 
 # Actor configuration for the AMQPActor class
 actor:
