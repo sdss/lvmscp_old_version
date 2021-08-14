@@ -32,7 +32,7 @@ Running an SCP
 
 SCP can be started by simply 'SCP start' command ::
 
-    SCP start
+    lvmscp start
 
 This will start SCP but will not start the porting. For that you need to use ''clu'' command. ::
 
@@ -48,9 +48,9 @@ Actor
 
 Archon Actor
 
-OSU Actor
+lvmieb Actor
 
-NPS Actor
+lvmnps Actor
 
 
 

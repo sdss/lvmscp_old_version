@@ -1,4 +1,4 @@
-#/usr/bin/env python
+# /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # @Author: Changgon Kim, Taeeun Kim, Mingyeong YANG (mingyeong@khu.ac.kr)
@@ -9,12 +9,9 @@
 import glob
 import importlib
 import os
-import warnings
 
 import click
 from clu.parsers.click import CluGroup, help_, ping, version
-
-from lvmscp.exceptions import SCPUserWarning
 
 
 @click.group(cls=CluGroup)
@@ -39,7 +36,8 @@ files = [
 
 for file_ in files:
     modname = file_[0:-3].replace("/", ".")
-    mod = importlib.import_module("lvmscp.actor.commands." + modname) #changged by CK 2021/03/30
+    mod = importlib.import_module(
+        "lvmscp.actor.commands." + modname
+    )  # changged by CK 2021/03/30
 
 os.chdir(cwd)
-

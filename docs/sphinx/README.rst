@@ -2,9 +2,9 @@ This is the documentation for the SDSS Python product SCP. The current version i
 
 .. code-block:: console
 
-  $ pip install sdss-SCP
+  $ pip install sdss-lvmscp
    
-  $ git clone https://github.com/sdss/SCP.git
+  $ git clone https://github.com/sdss/lvmscp.git
 
 Refer to the `repository <https://github.com/sdss/SCP.git>`__ for details on how to develop the code and for issue tracking.
 
