@@ -8,67 +8,70 @@
 # @Last modified by:   Brian Cherinka
 # @Last Modified time: 2017-12-05 12:19:32
 
-from __future__ import print_function, division, absolute_import
+from __future__ import absolute_import, division, print_function
 
 
-class SCPError(Exception):
-    """A custom core SCP exception"""
+class lvmscpError(Exception):
+    """A custom core lvmscp exception"""
 
     def __init__(self, message=None):
 
-        message = 'There has been an error' \
-            if not message else message
+        message = "There has been an error" if not message else message
 
-        super(SCPError, self).__init__(message)
+        super(lvmscpError, self).__init__(message)
 
 
-class SCPNotImplemented(SCPError):
+class lvmscpNotImplemented(lvmscpError):
     """A custom exception for not yet implemented features."""
 
     def __init__(self, message=None):
 
-        message = 'This feature is not implemented yet.' \
-            if not message else message
+        message = "This feature is not implemented yet." if not message else message
 
-        super(SCPNotImplemented, self).__init__(message)
+        super(lvmscpNotImplemented, self).__init__(message)
 
 
-class SCPAPIError(SCPError):
+class lvmscpAPIError(lvmscpError):
     """A custom exception for API errors"""
 
     def __init__(self, message=None):
         if not message:
-            message = 'Error with Http Response from SCP API'
+            message = "Error with Http Response from lvmscp API"
         else:
-            message = 'Http response error from SCP API. {0}'.format(message)
+            message = "Http response error from lvmscp API. {0}".format(message)
 
-        super(SCPAPIError, self).__init__(message)
+        super(lvmscpAPIError, self).__init__(message)
 
 
-class SCPApiAuthError(SCPAPIError):
+class lvmscpApiAuthError(lvmscpAPIError):
     """A custom exception for API authentication errors"""
+
     pass
 
 
-class SCPMissingDependency(SCPError):
+class lvmscpMissingDependency(lvmscpError):
     """A custom exception for missing dependencies."""
+
     pass
 
 
-class SCPWarning(Warning):
-    """Base warning for SCP."""
+class lvmscpWarning(Warning):
+    """Base warning for lvmscp."""
 
 
-class SCPUserWarning(UserWarning, SCPWarning):
+class lvmscpUserWarning(UserWarning, lvmscpWarning):
     """The primary warning class."""
+
     pass
 
 
-class SCPSkippedTestWarning(SCPUserWarning):
+class lvmscpSkippedTestWarning(lvmscpUserWarning):
     """A warning for when a test is skipped."""
+
     pass
 
 
-class SCPDeprecationWarning(SCPUserWarning):
+class lvmscpDeprecationWarning(lvmscpUserWarning):
     """A warning for deprecated features."""
+
     pass

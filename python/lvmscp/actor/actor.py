@@ -1,4 +1,4 @@
-#/usr/bin/env python
+# /usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # @Author: Mingyeong YANG (mingyeong@khu.ac.kr)
@@ -6,21 +6,17 @@
 # @Filename: actor.py
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
-from __future__ import annotations, print_function, division, absolute_import
-
-import asyncio
-import os
-import warnings
-from contextlib import suppress
+from __future__ import absolute_import, annotations, division, print_function
 
 from clu.actor import AMQPActor
 
 from .commands import parser as SCP_command_parser
 
-#from scpactor import __version__
 
+# from scpactor import __version__
 
 __all__ = ["lvmscp"]
+
 
 class lvmscp(AMQPActor):
     """SCP controller actor.
@@ -40,4 +36,3 @@ class lvmscp(AMQPActor):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
-

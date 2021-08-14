@@ -13,13 +13,12 @@ Contents
 .. toctree::
 
   getting-started
-  SCP
-  OSU
-  NPS
+  lvmscp
+  lvmieb
+  lvmnps
   Archon
   testing
   api
-  changelog
 
 
 Indices and tables

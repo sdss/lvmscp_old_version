@@ -1,8 +1,7 @@
-#encoding: utf-8
+# encoding: utf-8
 #
-#added by CK 2021/04/06
+# added by CK 2021/04/06
 
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # @Date: 2020-10-26
@@ -10,7 +9,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import os
-import asyncio
+
 import click
 from click_default_group import DefaultGroup
 from clu.tools import cli_coro as cli_coro_lvmscp
@@ -37,7 +36,7 @@ from lvmscp.actor.actor import lvmscp as SCPActorInstance
 @click.pass_context
 def lvmscp(ctx, config_file, verbose):
     """scp"""
-    
+
     ctx.obj = {"verbose": verbose, "config_file": config_file}
 
 
@@ -47,13 +46,13 @@ def lvmscp(ctx, config_file, verbose):
 async def actor(ctx):
     """Runs the actor."""
     default_config_file = os.path.join(os.path.dirname(__file__), "etc/lvmscp.yml")
-    config_file = ctx.obj["config_file"] or default_config_file
+    # config_file = ctx.obj["config_file"] or default_config_file
 
     lvmscp_obj = SCPActorInstance.from_config(default_config_file)
 
-#    if ctx.obj["verbose"]:
-#        scpactor_obj.log.fh.setLevel(0)
-#        scpactor_obj.log.sh.setLevel(0)
+    #    if ctx.obj["verbose"]:
+    #        scpactor_obj.log.fh.setLevel(0)
+    #        scpactor_obj.log.sh.setLevel(0)
 
     await lvmscp_obj.start()
     await lvmscp_obj.run_forever()

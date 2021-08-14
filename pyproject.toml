@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdss-lvmscp"
-version = "0.1.0-alpha.0"
+version = "0.1.1"
 description = "Simple Template package for creating SDSS Python projects"
 authors = ["Changgon Kim <changgonkim@khu.ac.kr>"]
 license = "BSD-3-Clause"
@@ -43,6 +43,7 @@ click = "^8.0.0"
 click-default-group = "^1.2.2"
 sdss-clu = "^1.0.0"
 daemonocle = "^1.2.3"
+black = "^21.7b0"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=7.11.0"
