@@ -45,4 +45,4 @@ async def lvmnps(command: Command, message):
         return command.fail(text=lvmnps_status_cmd.status)
 
     replies = lvmnps_status_cmd.replies
-    command.finish(replies[-1].body)
+    command.finish(replies[-2].body)

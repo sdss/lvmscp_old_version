@@ -9,7 +9,8 @@
 import asyncio
 
 import click
-from exceptions import lvmscpError
+
+from lvmscp.exceptions import lvmscpError
 
 from . import parser
 

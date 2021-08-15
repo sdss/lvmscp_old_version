@@ -1,3 +1,5 @@
+import asyncio
+
 from clu.command import Command
 
 from . import parser
@@ -74,24 +76,42 @@ async def status(command: Command):
     rtd4 = replies[-1].body["rtd4"]
 
     # Check the status of the transducer
-    transducer_status_cmd = await command.actor.send_command(
-        "lvmieb", "transducer status"
+    r1_pressure = False
+    b1_pressure = False
+    z1_pressure = False
+    r1_temperature = False
+    b1_temperature = False
+    z1_temperature = False
+
+    transducer_status_cmd = await asyncio.wait_for(
+        command.actor.send_command("lvmieb", "transducer status"), 1
     )
     await transducer_status_cmd
 
+    """
+    try:
+        transducer_status_cmd = await asyncio.wait_for(command.actor.send_command(
+            "lvmieb", "transducer status"
+        ), 1)
+        await transducer_status_cmd
+    except lvmscpError:
+        return command.fail(
+            text="Failed to receive the telemetry status from transducer"
+        )
+    """
     if transducer_status_cmd.status.did_fail:
         return command.fail(
-            text="Failed to receive the telemetry status from wago sensors"
+            text="Failed to receive the telemetry status from transducer"
         )
+    else:
+        replies = transducer_status_cmd.replies
 
-    replies = transducer_status_cmd.replies
-
-    r1_pressure = replies[-1].body["r1_pressure"]
-    b1_pressure = replies[-1].body["b1_pressure"]
-    z1_pressure = replies[-1].body["z1_pressure"]
-    r1_temperature = replies[-1].body["r1_temperature"]
-    b1_temperature = replies[-1].body["b1_temperature"]
-    z1_temperature = replies[-1].body["z1_temperature"]
+        r1_pressure = replies[-1].body["r1_pressure"]
+        b1_pressure = replies[-1].body["b1_pressure"]
+        z1_pressure = replies[-1].body["z1_pressure"]
+        r1_temperature = replies[-1].body["r1_temperature"]
+        b1_temperature = replies[-1].body["b1_temperature"]
+        z1_temperature = replies[-1].body["z1_temperature"]
 
     command.info(
         IEB_POWER={
