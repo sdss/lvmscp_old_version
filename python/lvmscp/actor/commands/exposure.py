@@ -20,19 +20,12 @@ exposure_lock = asyncio.Lock()
 
 
 @parser.command()
-@click.option(
-    "-c",
-    "--count",
-    type=int,
-    default=1,
-    help="Number of frames to take with this configuration.",
-)
-@click.option(
-    "--flavour",
-    "-f",
-    type=str,
+@click.argument("COUNT", type=int, default=1, required=False)
+@click.argument(
+    "FLAVOUR",
+    type=click.Choice(["bias", "object", "flat", "dark"]),
     default="object",
-    help="object, dark, or bias.",
+    required=False,
 )
 @click.argument("EXPTIME", type=float)
 async def exposure(command, exptime: float, count: int, flavour: str):
@@ -60,6 +53,16 @@ async def exposure(command, exptime: float, count: int, flavour: str):
         if lvmnps_status_cmd.status.did_fail:
             return command.fail(text=lvmnps_status_cmd.status)
 
+        # Check the actor is running
+        try:
+            archon_status_cmd = await command.actor.send_command("archon", "ping")
+            await archon_status_cmd
+        except lvmscpError as err:
+            return command.fail(error=str(err))
+
+        if archon_status_cmd.status.did_fail:
+            return command.fail(text=archon_status_cmd.status)
+
         if flavour != "bias" and exptime is None:
             raise click.UsageError("EXPOSURE-TIME is required unless --flavour=bias.")
         elif flavour == "bias":
@@ -80,7 +83,6 @@ async def exposure(command, exptime: float, count: int, flavour: str):
             )
 
         replies = wago_power_status_cmd.replies
-
         shutter_power_status = replies[-1].body["shutter_power"]
         hartmann_left_power_status = replies[-1].body["hartmann_left_power"]
         hartmann_right_power_status = replies[-1].body["hartmann_right_power"]
@@ -130,18 +132,41 @@ async def exposure(command, exptime: float, count: int, flavour: str):
         hartmann_left_status = replies[-1].body["hartmann_left"]
         hartmann_right_status = replies[-1].body["hartmann_right"]
 
-        if not (hartmann_left_status == "opened" and hartmann_right_status == "opened"):
-            return command.fail(
-                text="Hartmann doors are not opened for the science exposure"
-            )
+        if flavour == "object" or flavour == "flat":
+            if not (
+                hartmann_left_status == "opened" and hartmann_right_status == "opened"
+            ):
+                return command.fail(
+                    text="Hartmann doors are not opened for the science exposure"
+                )
 
         # Check that the configuration has been loaded.
-
         archon_cmd = await (await command.actor.send_command("archon", "status"))
         if archon_cmd.status.did_fail:
             command.fail(text="Failed getting status from the controller")
 
+        replies = archon_cmd.replies
+        check_idle = replies[-2].body["status"]["status_names"][0]
+        if check_idle != "IDLE":
+            return command.fail(text="archon is not initialized")
+
         command.info(text="Starting the exposure.")
+
+        # Turn on the flat lamp for flat sequence, have to check the lamp is already on..
+        if flavour == "flat":
+            flat_lamp_cmd = await (
+                await command.actor.send_command("lvmnps", 'on "625 nm LED (M625L4)"')
+            )
+            if flat_lamp_cmd.status.did_fail:
+                command.fail(text="Failed getting status from the network power switch")
+            replies = flat_lamp_cmd.replies
+            check_lamp = replies[-2].body["STATUS"]["DLI-NPS-01"][
+                "625 nm LED (M625L4)"
+            ]["STATE"]
+            if check_lamp:
+                command.info(text="flat lamp is on!")
+            else:
+                return command.fail(text="flat lamp is off...")
 
         # start exposure loop
         for nn in range(count):
@@ -180,6 +205,10 @@ async def exposure(command, exptime: float, count: int, flavour: str):
                 return command.fail(
                     text="Failed starting exposure. Trying to abort and exiting."
                 )
+            else:
+                reply = archon_cmd.replies
+                print(reply[-2].body["text"])
+                command.info(text=reply[-2].body["text"])
 
             if flavour != "bias" and exptime > 0:
                 # Use command to access the actor and command the shutter
@@ -210,6 +239,7 @@ async def exposure(command, exptime: float, count: int, flavour: str):
                     await command.actor.send_command("archon", "expose abort --flush")
                     return command.fail(text="Failed to close the shutter")
 
+            command.info(text="readout . . .")
             # Finish exposure
             archon_cmd = await (
                 await command.actor.send_command(
@@ -220,6 +250,53 @@ async def exposure(command, exptime: float, count: int, flavour: str):
             )
             if archon_cmd.status.did_fail:
                 command.fail(text="Failed reading out exposure")
+
+            # For monitering the status
+            while True:
+                readout_cmd = await command.actor.send_command("archon", "status")
+                await readout_cmd
+                readout_replies = readout_cmd.replies
+                archon_readout = readout_replies[-2].body["status"]["status_names"][0]
+                if archon_readout == "READING":
+                    continue
+                else:
+                    command.info(text="readout finished!")
+                    break
+
+            replies = archon_cmd.replies
+            print(replies[-11].body)
+            print(replies[-10].body)
+            print(replies[-9].body)
+            print(replies[-8].body)
+            print(replies[-7].body)
+            print(replies[-6].body)
+            print(replies[-5].body)
+            print(replies[-4].body)
+            print(replies[-3].body)
+
+            command.info(replies[-8].body)
+            command.info(replies[-7].body)
+            command.info(replies[-6].body)
+            command.info(replies[-5].body)
+            command.info(replies[-4].body)
+            command.info(replies[-3].body)
+            command.info(replies[-2].body)
+
+        # Turn off the flat lamp for flat sequence
+        if flavour == "flat":
+            flat_lamp_cmd = await (
+                await command.actor.send_command("lvmnps", 'off "625 nm LED (M625L4)"')
+            )
+            if flat_lamp_cmd.status.did_fail:
+                command.fail(text="Failed getting status from the network power switch")
+            replies = flat_lamp_cmd.replies
+            check_lamp = replies[-2].body["STATUS"]["DLI-NPS-01"][
+                "625 nm LED (M625L4)"
+            ]["STATE"]
+            if not check_lamp:
+                command.info(text="flat lamp is off!")
+            else:
+                return command.fail(text="flat lamp is on...")
 
         return command.finish(text="Exposure sequence done!")
 

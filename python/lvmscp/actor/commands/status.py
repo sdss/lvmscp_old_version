@@ -41,15 +41,19 @@ async def status(command: Command):
     shutter_status = replies[-1].body["shutter"]
 
     # Check the status (opened / closed) of the hartmann doors
+
+    hartmann_left_status = "ERROR"
+    hartmann_right_status = "ERROR"
+
     hartmann_status_cmd = await command.actor.send_command("lvmieb", "hartmann status")
     await hartmann_status_cmd
 
     if hartmann_status_cmd.status.did_fail:
-        return command.fail(text="Failed to receive the status of the hartmann status")
-
-    replies = hartmann_status_cmd.replies
-    hartmann_left_status = replies[-1].body["hartmann_left"]
-    hartmann_right_status = replies[-1].body["hartmann_right"]
+        command.info(text="Failed to receive the status of the hartmann status")
+    else:
+        replies = hartmann_status_cmd.replies
+        hartmann_left_status = replies[-1].body["hartmann_left"]
+        hartmann_right_status = replies[-1].body["hartmann_right"]
 
     # Check the status of the wago module (wago status)
     wago_telemetry_status_cmd = await command.actor.send_command(
@@ -76,12 +80,12 @@ async def status(command: Command):
     rtd4 = replies[-1].body["rtd4"]
 
     # Check the status of the transducer
-    r1_pressure = False
-    b1_pressure = False
-    z1_pressure = False
-    r1_temperature = False
-    b1_temperature = False
-    z1_temperature = False
+    r1_pressure = "ERROR"
+    b1_pressure = "ERROR"
+    z1_pressure = "ERROR"
+    r1_temperature = "ERROR"
+    b1_temperature = "ERROR"
+    z1_temperature = "ERROR"
 
     transducer_status_cmd = await asyncio.wait_for(
         command.actor.send_command("lvmieb", "transducer status"), 1
@@ -100,9 +104,7 @@ async def status(command: Command):
         )
     """
     if transducer_status_cmd.status.did_fail:
-        return command.fail(
-            text="Failed to receive the telemetry status from transducer"
-        )
+        command.info(text="Failed to receive the telemetry status from transducer")
     else:
         replies = transducer_status_cmd.replies
 
