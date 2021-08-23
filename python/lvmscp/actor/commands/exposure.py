@@ -100,6 +100,7 @@ async def exposure(command, exptime: float, count: int, flavour: str):
                 text="Cannot start exposure : Right hartmann door power off"
             )
 
+        
         # Check the status (opened / closed) of the shutter
         shutter_status_cmd = await command.actor.send_command(
             "lvmieb", "shutter status"
@@ -116,7 +117,7 @@ async def exposure(command, exptime: float, count: int, flavour: str):
 
         if shutter_status_before != "closed":
             return command.fail(text="Shutter is already opened. The command will fail")
-
+        
         # Check the status (opened / closed) of the hartmann doors
         hartmann_status_cmd = await command.actor.send_command(
             "lvmieb", "hartmann status"
@@ -151,11 +152,11 @@ async def exposure(command, exptime: float, count: int, flavour: str):
             return command.fail(text="archon is not initialized")
 
         command.info(text="Starting the exposure.")
-
-        # Turn on the flat lamp for flat sequence, have to check the lamp is already on..
+        
+        #  check the lamp is already on.. for flat sequence
         if flavour == "flat":
             flat_lamp_cmd = await (
-                await command.actor.send_command("lvmnps", 'on "625 nm LED (M625L4)"')
+                await command.actor.send_command("lvmnps", 'status what "625 nm LED (M625L4)"')
             )
             if flat_lamp_cmd.status.did_fail:
                 command.fail(text="Failed getting status from the network power switch")
@@ -167,7 +168,7 @@ async def exposure(command, exptime: float, count: int, flavour: str):
                 command.info(text="flat lamp is on!")
             else:
                 return command.fail(text="flat lamp is off...")
-
+        
         # start exposure loop
         for nn in range(count):
 
@@ -281,22 +282,6 @@ async def exposure(command, exptime: float, count: int, flavour: str):
             command.info(replies[-4].body)
             command.info(replies[-3].body)
             command.info(replies[-2].body)
-
-        # Turn off the flat lamp for flat sequence
-        if flavour == "flat":
-            flat_lamp_cmd = await (
-                await command.actor.send_command("lvmnps", 'off "625 nm LED (M625L4)"')
-            )
-            if flat_lamp_cmd.status.did_fail:
-                command.fail(text="Failed getting status from the network power switch")
-            replies = flat_lamp_cmd.replies
-            check_lamp = replies[-2].body["STATUS"]["DLI-NPS-01"][
-                "625 nm LED (M625L4)"
-            ]["STATE"]
-            if not check_lamp:
-                command.info(text="flat lamp is off!")
-            else:
-                return command.fail(text="flat lamp is on...")
 
         return command.finish(text="Exposure sequence done!")
 
