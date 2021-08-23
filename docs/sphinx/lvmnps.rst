@@ -1,9 +1,9 @@
-.. _NPS:
+.. _lvmnps:
 
-NPS
+lvmnps
 ============
 
-This section introduces the NPS actor.
+This section introduces the lvmnps actor.
 
 
 Actor

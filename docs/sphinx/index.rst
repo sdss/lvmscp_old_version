@@ -16,7 +16,7 @@ Contents
   lvmscp
   lvmieb
   lvmnps
-  Archon
+  archon
   testing
   api
 

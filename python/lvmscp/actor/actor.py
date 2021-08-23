@@ -19,13 +19,11 @@ __all__ = ["lvmscp"]
 
 
 class lvmscp(AMQPActor):
-    """SCP controller actor.
+    """lvmscp controller actor.
     In addition to the normal arguments and keyword parameters for
     `~clu.actor.AMQPActor`, the class accepts the following parameters.
     Parameters
     ----------
-    controllers
-        The list of `.SCP_Controller` instances to manage.
     """
 
     parser = SCP_command_parser

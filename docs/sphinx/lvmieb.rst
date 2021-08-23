@@ -1,9 +1,9 @@
-.. _OSU:
+.. _lvmieb:
 
-OSU
+lvmieb
 ============
 
-This section introduces the OSU actor.
+This section introduces the lvmieb actor.
 
 
 actor

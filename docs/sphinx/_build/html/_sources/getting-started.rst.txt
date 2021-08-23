@@ -46,7 +46,7 @@ You can learn more about the archon `here <https://sdss-archon.readthedocs.io/en
 Actor
 --------
 
-Archon Actor
+archon Actor
 
 lvmieb Actor
 

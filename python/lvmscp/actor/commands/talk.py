@@ -7,12 +7,12 @@ from . import parser
 
 
 @parser.group()
-def eng(*args):
-    """control the engineering"""
+def talk(*args):
+    """talk to lower actors for engineering"""
     pass
 
 
-@eng.command()
+@talk.command()
 @click.argument("message", type=str)
 async def lvmieb(command: Command, message):
     """Test the lvmieb"""
@@ -30,7 +30,7 @@ async def lvmieb(command: Command, message):
     command.finish(replies[-1].body)
 
 
-@eng.command()
+@talk.command()
 @click.argument("message", type=str)
 async def lvmnps(command: Command, message):
     """Test the lvmnps"""
@@ -45,4 +45,4 @@ async def lvmnps(command: Command, message):
         return command.fail(text=lvmnps_status_cmd.status)
 
     replies = lvmnps_status_cmd.replies
-    command.finish(replies[-1].body)
+    command.finish(replies[-2].body)

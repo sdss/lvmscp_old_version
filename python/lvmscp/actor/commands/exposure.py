@@ -7,9 +7,11 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import json
 
 import click
-from exceptions import lvmscpError
+
+from lvmscp.exceptions import lvmscpError
 
 from . import parser
 
@@ -19,27 +21,20 @@ exposure_lock = asyncio.Lock()
 
 
 @parser.command()
-@click.option(
-    "-c",
-    "--count",
-    type=int,
-    default=1,
-    help="Number of frames to take with this configuration.",
-)
-@click.option(
-    "--flavour",
-    "-f",
-    type=str,
+@click.argument("COUNT", type=int, default=1, required=False)
+@click.argument(
+    "FLAVOUR",
+    type=click.Choice(["bias", "object", "flat", "dark"]),
     default="object",
-    help="object, dark, or bias.",
+    required=False,
 )
-@click.argument("EXPTIME", type=float)
+@click.argument("EXPTIME", type=float, required=False)
 async def exposure(command, exptime: float, count: int, flavour: str):
-    """Exposes the camera."""
+    """Exposure command controlling all lower actors"""
 
-    # lock for exposure sequence only running for once
+    # lock for exposure sequence only running for onc delegate
     async with exposure_lock:
-        # Check the actor is running
+        # Check the lvmieb actor is running
         try:
             lvmieb_status_cmd = await command.actor.send_command("lvmieb", "ping")
             await lvmieb_status_cmd
@@ -49,7 +44,7 @@ async def exposure(command, exptime: float, count: int, flavour: str):
         if lvmieb_status_cmd.status.did_fail:
             return command.fail(text=lvmieb_status_cmd.status)
 
-        # Check the actor is running
+        # Check the lvmnps actor is running
         try:
             lvmnps_status_cmd = await command.actor.send_command("lvmnps", "ping")
             await lvmnps_status_cmd
@@ -59,6 +54,17 @@ async def exposure(command, exptime: float, count: int, flavour: str):
         if lvmnps_status_cmd.status.did_fail:
             return command.fail(text=lvmnps_status_cmd.status)
 
+        # Check the archon actor is running
+        try:
+            archon_status_cmd = await command.actor.send_command("archon", "ping")
+            await archon_status_cmd
+        except lvmscpError as err:
+            return command.fail(error=str(err))
+
+        if archon_status_cmd.status.did_fail:
+            return command.fail(text=archon_status_cmd.status)
+
+        # Check the exposure time input (bias = 0.0)
         if flavour != "bias" and exptime is None:
             raise click.UsageError("EXPOSURE-TIME is required unless --flavour=bias.")
         elif flavour == "bias":
@@ -79,7 +85,6 @@ async def exposure(command, exptime: float, count: int, flavour: str):
             )
 
         replies = wago_power_status_cmd.replies
-
         shutter_power_status = replies[-1].body["shutter_power"]
         hartmann_left_power_status = replies[-1].body["hartmann_left_power"]
         hartmann_right_power_status = replies[-1].body["hartmann_right_power"]
@@ -129,34 +134,107 @@ async def exposure(command, exptime: float, count: int, flavour: str):
         hartmann_left_status = replies[-1].body["hartmann_left"]
         hartmann_right_status = replies[-1].body["hartmann_right"]
 
-        if not (hartmann_left_status == "opened" and hartmann_right_status == "opened"):
-            return command.fail(
-                text="Hartmann doors are not opened for the science exposure"
-            )
+        if flavour == "object" or flavour == "flat":
+            if not (
+                hartmann_left_status == "opened" and hartmann_right_status == "opened"
+            ):
+                return command.fail(
+                    text="Hartmann doors are not opened for the science exposure"
+                )
 
-        # Check that the configuration has been loaded.
-
+        # Check that the configuration of archon controller has been loaded.
         archon_cmd = await (await command.actor.send_command("archon", "status"))
         if archon_cmd.status.did_fail:
             command.fail(text="Failed getting status from the controller")
 
+        replies = archon_cmd.replies
+        check_idle = replies[-2].body["status"]["status_names"][0]
+        if check_idle != "IDLE":
+            return command.fail(text="archon is not initialized")
+
         command.info(text="Starting the exposure.")
+
+        #  check the lamp is already on.. for flat sequence
+        if flavour == "flat":
+            flat_lamp_cmd = await (
+                await command.actor.send_command("lvmnps", "status what Krypton")
+            )
+            if flat_lamp_cmd.status.did_fail:
+                command.fail(text="Failed getting status from the network power switch")
+            replies = flat_lamp_cmd.replies
+            check_lamp = replies[-2].body["STATUS"]["DLI-NPS-03"]["Krypton"]["STATE"]
+            if check_lamp:
+                command.info(text="flat lamp is on!")
+            else:
+                return command.fail(text="flat lamp is off...")
 
         # start exposure loop
         for nn in range(count):
 
             command.info(f"Taking exposure {nn + 1} of {count}.")
 
-            # Read pressure.
-            # pressure = await send_message("@253P?\\")
-            # command.info(pres = pressure)
-
             # Build extra header.
-            # header = {"PRESSURE": (pressure, "Spectrograph pressure [torr]")}
-            # header_json = json.dumps(header, indent=None)
-            # command.info("added header")
+            scp_status_cmd = await command.actor.send_command("lvmscp", "status")
+            await scp_status_cmd
 
-            # Flushing
+            if scp_status_cmd.status.did_fail:
+                return command.fail(text="Failed to receive the status of the lvmscp")
+
+            replies = scp_status_cmd.replies
+            rhtRH1 = replies[-2].body["IEB_HUMIDITY"]["rhtRH1"]
+            rhtRH2 = replies[-2].body["IEB_HUMIDITY"]["rhtRH2"]
+            rhtRH3 = replies[-2].body["IEB_HUMIDITY"]["rhtRH3"]
+            rhtT1 = replies[-2].body["IEB_TEMPERATURE"]["rhtT1"]
+            rhtT2 = replies[-2].body["IEB_TEMPERATURE"]["rhtT2"]
+            rhtT3 = replies[-2].body["IEB_TEMPERATURE"]["rhtT3"]
+            rtd1 = replies[-2].body["IEB_TEMPERATURE"]["rtd1"]
+            rtd2 = replies[-2].body["IEB_TEMPERATURE"]["rtd2"]
+            rtd3 = replies[-2].body["IEB_TEMPERATURE"]["rtd3"]
+            rtd4 = replies[-2].body["IEB_TEMPERATURE"]["rtd4"]
+
+            if replies[-2].body["NETWORK_POWER_SWITCHES"]["STATUS"]["DLI-NPS-02"][
+                "LN2 NIR valve"
+            ]["STATE"]:
+                ln2_nir = "ON"
+            else:
+                ln2_nir = "OFF"
+
+            if replies[-2].body["NETWORK_POWER_SWITCHES"]["STATUS"]["DLI-NPS-02"][
+                "LN2 Red Valve"
+            ]["STATE"]:
+                ln2_red = "ON"
+            else:
+                ln2_red = "OFF"
+
+            header_dict = {
+                "rhtRH1": (rhtRH1, "IEB rht sensor humidity [%]"),
+                "rhtRH2": (rhtRH2, "IEB rht sensor humidity [%]"),
+                "rhtRH3": (rhtRH3, "IEB rht sensor humidity [%]"),
+                "rhtT1": (rhtT1, "IEB rht sensor Temperature [C]"),
+                "rhtT2": (rhtT2, "IEB rht sensor Temperature [C]"),
+                "rhtT3": (rhtT3, "IEB rht sensor Temperature [C]"),
+                "rtd1": (rtd1, "IEB rtd sensor Temperature [C]"),
+                "rtd2": (rtd2, "IEB rtd sensor Temperature [C]"),
+                "rtd3": (rtd3, "IEB rtd sensor Temperature [C]"),
+                "rtd4": (rtd4, "IEB rtd sensor Temperature [C]"),
+                "LN2NIR": (
+                    ln2_nir,
+                    replies[-2].body["NETWORK_POWER_SWITCHES"]["STATUS"]["DLI-NPS-02"][
+                        "LN2 NIR valve"
+                    ]["DESCR"],
+                ),
+                "LN2RED": (
+                    ln2_red,
+                    replies[-2].body["NETWORK_POWER_SWITCHES"]["STATUS"]["DLI-NPS-02"][
+                        "LN2 Red Valve"
+                    ]["DESCR"],
+                ),
+            }
+
+            header_json = json.dumps(header_dict, indent=None)
+            print(header_json)
+
+            # Flushing before CCD exposure
             flush_count = 1
             if flush_count > 0:
                 command.info("Flushing")
@@ -167,7 +245,7 @@ async def exposure(command, exptime: float, count: int, flavour: str):
             if archon_cmd.status.did_fail:
                 return command.fail(text="Failed flushing")
 
-            # Start exposure
+            # Start CCD exposure
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
@@ -179,6 +257,10 @@ async def exposure(command, exptime: float, count: int, flavour: str):
                 return command.fail(
                     text="Failed starting exposure. Trying to abort and exiting."
                 )
+            else:
+                reply = archon_cmd.replies
+                print(reply[-2].body["text"])
+                command.info(text=reply[-2].body["text"])
 
             if flavour != "bias" and exptime > 0:
                 # Use command to access the actor and command the shutter
@@ -214,11 +296,46 @@ async def exposure(command, exptime: float, count: int, flavour: str):
                 await command.actor.send_command(
                     "archon",
                     "expose finish",
-                    # f"--header '{header_json}'",
+                    f"--header '{header_json}'",
                 )
             )
             if archon_cmd.status.did_fail:
                 command.fail(text="Failed reading out exposure")
+
+            # Readout pending
+            command.info(text="readout . . .")
+
+            # For monitering the status
+            while True:
+                readout_cmd = await command.actor.send_command("archon", "status")
+                await readout_cmd
+                readout_replies = readout_cmd.replies
+                archon_readout = readout_replies[-2].body["status"]["status_names"][0]
+                if archon_readout == "READING":
+                    continue
+                else:
+                    command.info(text="readout finished!")
+                    break
+
+            replies = archon_cmd.replies
+
+            print(replies[-11].body)
+            print(replies[-10].body)
+            print(replies[-9].body)
+            print(replies[-8].body)
+            print(replies[-7].body)
+            print(replies[-6].body)
+            print(replies[-5].body)
+            print(replies[-4].body)
+            print(replies[-3].body)
+
+            command.info(replies[-8].body)
+            command.info(replies[-7].body)
+            command.info(replies[-6].body)
+            command.info(replies[-5].body)
+            command.info(replies[-4].body)
+            command.info(replies[-3].body)
+            command.info(replies[-2].body)
 
         return command.finish(text="Exposure sequence done!")
 
