@@ -1,7 +1,7 @@
 
 .. _getting-started:
 
-Getting started with SCP
+Getting started with lvmscp
 ============================
 
 Introduction
@@ -25,9 +25,9 @@ Here is the Hardware and Software Component Architecture diagram in spectrograph
 
 
 
-.. _running-SCP:
+.. _running-lvmscp:
 
-Running an SCP
+Running lvmscp
 ----------------
 
 SCP can be started by simply 'SCP start' command ::
