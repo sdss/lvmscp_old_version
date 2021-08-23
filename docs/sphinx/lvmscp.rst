@@ -1,9 +1,9 @@
-.. _SCP:
+.. _lvmscp:
 
-SCP
+lvmscp
 ============
 
-This section introduces the SCP.
+This section introduces the lvmscp actor.
 
 
 Actor
