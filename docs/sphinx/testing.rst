@@ -1,9 +1,9 @@
 .. _testing:
 
-Testing with SCP
+Testing with lvmscp
 =====================
 
-SCP provides the control system to manage spectrograph. A typical example is as follows ::
+lvmscp actor provides the control system to manage spectrograph. A typical example is as follows ::
 
   lvmscp eng
 
