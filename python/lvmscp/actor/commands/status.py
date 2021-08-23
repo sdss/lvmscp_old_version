@@ -13,35 +13,34 @@ async def status(command: Command):
     await nps_status_cmd
 
     if nps_status_cmd.status.did_fail:
-        return command.fail(text="Failed to receive the power status from wago relays")
-
-    nps_replies = nps_status_cmd.replies
+        command.info(text="Failed to receive the power status from wago relays")
+    else:
+        nps_replies = nps_status_cmd.replies
 
     # check the power of the shutter & hartmann doors
     wago_power_status_cmd = await command.actor.send_command("lvmieb", "wago getpower")
     await wago_power_status_cmd
 
     if wago_power_status_cmd.status.did_fail:
-        return command.fail(text="Failed to receive the power status from wago relays")
-
-    replies = wago_power_status_cmd.replies
-
-    shutter_power_status = replies[-1].body["shutter_power"]
-    hartmann_left_power_status = replies[-1].body["hartmann_left_power"]
-    hartmann_right_power_status = replies[-1].body["hartmann_right_power"]
+        command.info(text="Failed to receive the power status from wago relays")
+    else:
+        replies = wago_power_status_cmd.replies
+        shutter_power_status = replies[-1].body["shutter_power"]
+        hartmann_left_power_status = replies[-1].body["hartmann_left_power"]
+        hartmann_right_power_status = replies[-1].body["hartmann_right_power"]
 
     # Check the status (opened / closed) of the shutter
+    shutter_status = "ERROR"
     shutter_status_cmd = await command.actor.send_command("lvmieb", "shutter status")
     await shutter_status_cmd
 
     if shutter_status_cmd.status.did_fail:
-        return command.fail(text="Failed to receive the status of the shutter status")
-
-    replies = shutter_status_cmd.replies
-    shutter_status = replies[-1].body["shutter"]
+        command.info(text="Failed to receive the status of the shutter status")
+    else:
+        replies = shutter_status_cmd.replies
+        shutter_status = replies[-1].body["shutter"]
 
     # Check the status (opened / closed) of the hartmann doors
-
     hartmann_left_status = "ERROR"
     hartmann_right_status = "ERROR"
 
@@ -62,22 +61,20 @@ async def status(command: Command):
     await wago_telemetry_status_cmd
 
     if wago_telemetry_status_cmd.status.did_fail:
-        return command.fail(
-            text="Failed to receive the telemetry status from wago sensors"
-        )
+        command.info(text="Failed to receive the telemetry status from wago sensors")
+    else:
+        replies = wago_telemetry_status_cmd.replies
 
-    replies = wago_telemetry_status_cmd.replies
-
-    rhtRH1 = replies[-1].body["rhtRH1"]
-    rhtT1 = replies[-1].body["rhtT1"]
-    rhtRH2 = replies[-1].body["rhtRH2"]
-    rhtT2 = replies[-1].body["rhtT2"]
-    rhtRH3 = replies[-1].body["rhtRH3"]
-    rhtT3 = replies[-1].body["rhtT3"]
-    rtd1 = replies[-1].body["rtd1"]
-    rtd2 = replies[-1].body["rtd2"]
-    rtd3 = replies[-1].body["rtd3"]
-    rtd4 = replies[-1].body["rtd4"]
+        rhtRH1 = replies[-1].body["rhtRH1"]
+        rhtT1 = replies[-1].body["rhtT1"]
+        rhtRH2 = replies[-1].body["rhtRH2"]
+        rhtT2 = replies[-1].body["rhtT2"]
+        rhtRH3 = replies[-1].body["rhtRH3"]
+        rhtT3 = replies[-1].body["rhtT3"]
+        rtd1 = replies[-1].body["rtd1"]
+        rtd2 = replies[-1].body["rtd2"]
+        rtd3 = replies[-1].body["rtd3"]
+        rtd4 = replies[-1].body["rtd4"]
 
     # Check the status of the transducer
     r1_pressure = "ERROR"
@@ -92,17 +89,6 @@ async def status(command: Command):
     )
     await transducer_status_cmd
 
-    """
-    try:
-        transducer_status_cmd = await asyncio.wait_for(command.actor.send_command(
-            "lvmieb", "transducer status"
-        ), 1)
-        await transducer_status_cmd
-    except lvmscpError:
-        return command.fail(
-            text="Failed to receive the telemetry status from transducer"
-        )
-    """
     if transducer_status_cmd.status.did_fail:
         command.info(text="Failed to receive the telemetry status from transducer")
     else:

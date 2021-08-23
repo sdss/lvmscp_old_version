@@ -35,7 +35,7 @@ from lvmscp.actor.actor import lvmscp as SCPActorInstance
 )
 @click.pass_context
 def lvmscp(ctx, config_file, verbose):
-    """scp"""
+    """brings the configuration .yaml file"""
 
     ctx.obj = {"verbose": verbose, "config_file": config_file}
 

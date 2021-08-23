@@ -12,4 +12,4 @@ Actor
 commands
 -----------
 
-The ``scp`` actor replies to the following commands.  
+The ``lvmscp`` actor replies to the following commands.  
