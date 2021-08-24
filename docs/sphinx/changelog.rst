@@ -1,4 +1,4 @@
-.. _scp-changelog:
+.. _changelog:
 
 ==========
 Change Log

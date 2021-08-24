@@ -18,7 +18,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Getting started with lvmscp" href="getting-started.html" />
+    <link rel="next" title="Getting started" href="getting-started.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -37,99 +37,20 @@
             
   <div class="section" id="lvmscp-documentation">
 <h1>lvmscp documentation<a class="headerlink" href="#lvmscp-documentation" title="Permalink to this headline">¶</a></h1>
-<p><img alt="Versions" src="https://img.shields.io/badge/python-&gt;3.8-blue" /> <a class="reference external" href="https://lvmscp.readthedocs.io/en/latest/?badge=latest"><img alt="Documentation Status" src="https://readthedocs.org/projects/lvmscp/badge/?version=latest" /></a> <a class="reference external" href="https://github.com/sdss/lvmscp/actions/workflows/test.yml"><img alt="Test" src="https://github.com/sdss/lvmscp/actions/workflows/test.yml/badge.svg" /></a> <a class="reference external" href="https://github.com/sdss/lvmscp/actions/workflows/Docker.yml"><img alt="Docker" src="https://github.com/sdss/lvmscp/actions/workflows/Docker.yml/badge.svg" /></a></p>
-<p>SDSS-V LVM(Local Volume Mapper) control software for the whole Spectrograpgh system</p>
-<div class="section" id="quick-start">
-<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="prerequisite">
-<h3>Prerequisite<a class="headerlink" href="#prerequisite" title="Permalink to this headline">¶</a></h3>
-<p>Install <a class="reference external" href="https://clu.readthedocs.io/en/latest/">CLU</a> by using PyPI.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install sdss-clu
-</pre></div>
-</div>
-<p>Install <a class="reference external" href="https://www.rabbitmq.com/">RabbitMQ</a> by using apt-get.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo apt-get install -y erlang
-$ sudo apt-get install -y rabbitmq-server
-$ sudo systemctl enable rabbitmq-server
-$ sudo systemctl start rabbitmq-server
-</pre></div>
-</div>
-<p>Install <a class="reference external" href="https://github.com/pyenv/pyenv">pyenv</a> by using <a class="reference external" href="https://github.com/pyenv/pyenv-installer">pyenv
-installer</a>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ curl https://pyenv.run | bash
-</pre></div>
-</div>
-<p>You should add the code below to <code class="docutils literal notranslate"><span class="pre">~/.bashrc</span></code> by using your preferred
-editor.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># pyenv</span>
-<span class="n">export</span> <span class="n">PYENV_ROOT</span><span class="o">=</span><span class="s2">&quot;$HOME/.pyenv&quot;</span>
-<span class="n">export</span> <span class="n">PATH</span><span class="o">=</span><span class="s2">&quot;$PYENV_ROOT/bin:$PATH&quot;</span>
-<span class="nb">eval</span> <span class="s2">&quot;$(pyenv init -)&quot;</span>
-<span class="nb">eval</span> <span class="s2">&quot;$(pyenv init --path)&quot;</span>
-<span class="nb">eval</span> <span class="s2">&quot;$(pyenv virtualenv-init -)&quot;</span>
-</pre></div>
-</div>
-<p><code class="docutils literal notranslate"><span class="pre">pyenv</span></code> builds Python from source. So you should install build
-dependencies. For more information, check <a class="reference external" href="https://github.com/pyenv/pyenv/wiki/Common-build-problems">Common build
-problems</a>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
-libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev \
-libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev python-openssl
-</pre></div>
-</div>
-<p>Set the python 3.9.1 virtual environment.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pyenv install 3.9.1
-$ pyenv virtualenv 3.9.1 lvmscp-with-3.9.1
-$ pyenv local lvmscp-with-3.9.1
-</pre></div>
-</div>
-<p>Install <a class="reference external" href="https://python-poetry.org/">poetry</a> and dependencies. For
-more information, check
-<a class="reference external" href="https://github.com/sdss/archon">sdss/archon</a>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install poetry
-$ python create_setup.py
-$ pip install -e .
-</pre></div>
-</div>
-</div>
-<div class="section" id="start-the-actor">
-<h3>Start the actor<a class="headerlink" href="#start-the-actor" title="Permalink to this headline">¶</a></h3>
-<p>Start <code class="docutils literal notranslate"><span class="pre">lvmscp</span></code> actor.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ lvmscp start
-</pre></div>
-</div>
-<p>In another terminal, type <code class="docutils literal notranslate"><span class="pre">clu</span></code> and <code class="docutils literal notranslate"><span class="pre">lvmscp</span> <span class="pre">ping</span></code> for test.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ clu
-lvmscp ping
-     07:41:22.636 lvmscp &gt;
-     07:41:22.645 lvmscp : {
-         &quot;text&quot;: &quot;Pong.&quot;
-         }
-</pre></div>
-</div>
-<p>Stop <code class="docutils literal notranslate"><span class="pre">lvmscp</span></code> actor.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ lvmscp stop
-</pre></div>
-</div>
-</div>
-</div>
-<div class="section" id="test">
-<h2>Test<a class="headerlink" href="#test" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">poetry</span> <span class="n">run</span> <span class="n">pytest</span>
-<span class="n">poetry</span> <span class="n">run</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">p</span> <span class="n">no</span><span class="p">:</span><span class="n">logging</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">vv</span>
-</pre></div>
-</div>
-</div>
 <div class="section" id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started with lvmscp</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="getting-started.html#introduction">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting-started.html#hardware-component">Hardware Component</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting-started.html#running-lvmscp">Running lvmscp</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting-started.html#actors">Actors</a></li>
-<li class="toctree-l2"><a class="reference internal" href="getting-started.html#configuration-files">Configuration files</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#quick-start">Quick Start</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#prerequisite">Prerequisite</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting-started.html#start-the-actor">Start the actor</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#test">Test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting-started.html#hardware-components">Hardware Components</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a><ul>
@@ -151,10 +72,7 @@ lvmscp ping
 <li class="toctree-l1"><a class="reference internal" href="lvmieb.html">lvmieb</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lvmnps.html">lvmnps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="archon.html">archon</a></li>
-<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing with lvmscp</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="testing.html#api">API</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples with lvmscp</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="api.html#module-lvmscp.actor.actor">Actor</a></li>
 </ul>
@@ -168,6 +86,10 @@ lvmscp ping
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 </ul>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
 </div>
 </div>
 
@@ -201,20 +123,31 @@ lvmscp ping
 
 <h3>Navigation</h3>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started with lvmscp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lvmieb.html">lvmieb</a></li>
 <li class="toctree-l1"><a class="reference internal" href="lvmnps.html">lvmnps</a></li>
 <li class="toctree-l1"><a class="reference internal" href="archon.html">archon</a></li>
-<li class="toctree-l1"><a class="reference internal" href="testing.html">Testing with lvmscp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples with lvmscp</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands.html">Commands</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Development</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/sdss/lvmscp">GitHub Repository</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/sdss/lvmscp/issues">Issues</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="#">Documentation overview</a><ul>
-      <li>Next: <a href="getting-started.html" title="next chapter">Getting started with lvmscp</a></li>
+      <li>Next: <a href="getting-started.html" title="next chapter">Getting started</a></li>
   </ul></li>
 </ul>
 </div>
