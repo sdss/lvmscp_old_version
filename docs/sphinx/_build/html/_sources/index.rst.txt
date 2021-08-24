@@ -9,7 +9,7 @@ Contents
 .. toctree::
 
   getting-started
-  lvmscp
+  commands
   lvmieb
   lvmnps
   archon

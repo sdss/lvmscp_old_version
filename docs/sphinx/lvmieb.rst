@@ -3,18 +3,4 @@
 lvmieb
 ============
 
-This section introduces the lvmieb actor.
-
-
-actor
-~~~~~
-
-
-controller
-~~~~~~~~~~
-
-
-command
-~~~~~~~~
-
-
+You can learn more about lvmieb actor in `lvmieb's documentation  <https://lvmieb.readthedocs.io/en/latest/>`_

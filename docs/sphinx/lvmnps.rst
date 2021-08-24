@@ -3,19 +3,4 @@
 lvmnps
 ============
 
-This section introduces the lvmnps actor.
-
-
-Actor
-~~~~~
-
-
-
-Controller
-~~~~~~~~~~
-
-
-
-Command
-~~~~~~~~
-
+You can learn more about lvmnps actor in `lvmnps's documentation  <https://lvmnps.readthedocs.io/en/latest/>`_
