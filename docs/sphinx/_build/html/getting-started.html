@@ -40,9 +40,8 @@
 <span id="id1"></span><h1>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
-<p>We assume that you are comfortable with asynchronous programming and ‘asyncio’ API. SCP stands for ‘Spectrograph Control Package’ and lvmscp is the actor that controls the lower level actors which are controlling devices inside the spectrograph. lvmscp is composed of the code based on the sdss software framework CLU. Among them, ‘sdss-clu’ is applied to create an actor that controls each hardware and executes communication.</p>
-<p>In ‘CLU’, We’’’ define what an <em>actor</em> is: and actor is a piece of software that performs a well defined task (control a CCD camera, interface with a database) and is a <em>server</em> that receives <em>commands</em> and replies with a series of <em>keywords</em>. If you are not familiar with those concepts, the <a class="reference external" href="https://clu.readthedocs.io/en/latest/index.html">CLU’s documentation</a> is a good reference place.</p>
-<p>We will expand on these concepts in following sections.</p>
+<p>SCP stands for ‘Spectrograph Control Package’ and lvmscp is the actor that controls the lower level actors which are controlling devices inside the spectrograph. lvmscp is based on the sdss software framework CLU. Among them, ‘sdss-clu’ is applied to create an actor that controls each hardware and executes communication.</p>
+<p>In ‘CLU’, We define what an <em>actor</em> is: and actor is a piece of software that performs a well defined task (control a CCD camera, interface with a database) and is a <em>server</em> that receives <em>commands</em> and replies with a series of <em>keywords</em>. If you are not familiar with those concepts, the <a class="reference external" href="https://clu.readthedocs.io/en/latest/index.html">CLU’s documentation</a> is a good reference place.</p>
 </div>
 <div class="section" id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
@@ -123,17 +122,16 @@ lvmscp ping
 </div>
 </div>
 </div>
-<div class="section" id="test">
-<h2>Test<a class="headerlink" href="#test" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">poetry</span> <span class="n">run</span> <span class="n">pytest</span>
-<span class="n">poetry</span> <span class="n">run</span> <span class="n">pytest</span> <span class="o">-</span><span class="n">p</span> <span class="n">no</span><span class="p">:</span><span class="n">logging</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">vv</span>
-</pre></div>
-</div>
-</div>
 <div class="section" id="hardware-components">
 <h2>Hardware Components<a class="headerlink" href="#hardware-components" title="Permalink to this headline">¶</a></h2>
-<p>Here is the Hardware and Software Component Architecture diagram in spectrograph.</p>
-<img alt="_images/HW__conf_20210506_LCO.png" class="align-center" src="_images/HW__conf_20210506_LCO.png" />
+<p>Here is the Hardware and Software Component diagram in spectrograph.</p>
+<img alt="_images/HW__conf_20210824_LCO.png" class="align-center" src="_images/HW__conf_20210824_LCO.png" />
+</div>
+<div class="section" id="architecture">
+<h2>Architecture<a class="headerlink" href="#architecture" title="Permalink to this headline">¶</a></h2>
+<p>Here is the Architecture and component diagram explaining the hierarchy of lvmscp.
+lvmscp is using the AMQP Actor class from clu which is based on RabbitMQ protocol, and each actor becomes a producer/consumer to activate commands.</p>
+<img alt="_images/compo_diagram_20210824.png" class="align-center" src="_images/compo_diagram_20210824.png" />
 </div>
 </div>
 
@@ -175,8 +173,8 @@ lvmscp ping
 <li class="toctree-l3"><a class="reference internal" href="#start-the-actor">Start the actor</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#test">Test</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#hardware-components">Hardware Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#architecture">Architecture</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples with lvmscp</a></li>
