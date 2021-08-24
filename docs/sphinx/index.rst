@@ -2,6 +2,8 @@
 lvmscp documentation
 =============================================
 
+.. include:: ../../README.rst
+  :start-line: 2
 
 Contents
 ------------
