@@ -8,13 +8,14 @@ Contents
 .. toctree::
 
   getting-started
-  commands
-  lvmieb
-  lvmnps
-  archon
   Examples
-  api
 
+Actors
+------------
+
+lvmieb <https://lvmieb.readthedocs.io/en/latest/>
+lvmnps <https://lvmnps.readthedocs.io/en/latest/>
+archon <https://sdss-archon.readthedocs.io/en/latest/>
 
 Indices and tables
 ------------------

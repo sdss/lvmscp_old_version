@@ -4,5 +4,7 @@
 Change Log
 ==========
 
-* First change goes here.
+(lvmscp-changelog)=
 
+```{include} ../../CHANGELOG.md
+```
