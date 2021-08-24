@@ -11,9 +11,3 @@ lvmscp actor provides the control system to manage spectrograph. A typical examp
 
 API
 ~~~~~~
-
-.. toctree::
-
-  api
-
-
