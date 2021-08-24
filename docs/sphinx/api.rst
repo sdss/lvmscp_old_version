@@ -1,15 +1,15 @@
 
 .. _api:
 
-API Reference
+API
 ==================
 
+.. _api-lvmscp:
 
 Actor
 -------
 
-
-commands
------------
-
-The ``lvmscp`` actor replies to the following commands.  
+.. automodule:: lvmscp.actor.actor
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -43,7 +43,7 @@ lvmscp is composed of lvmieb actor, lvmnps actor, and archon actor. Each actor c
 
 You can learn more about the archon `here <https://sdss-archon.readthedocs.io/en/latest/>`_.
 
-Actor
+Actors
 --------
 
 archon Actor
