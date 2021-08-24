@@ -99,14 +99,6 @@ Stop ``lvmscp`` actor.
 
     $ lvmscp stop
 
-Test
-----
-
-::
-
-     poetry run pytest
-     poetry run pytest -p no:logging -s -vv 
-     
 
 .. |Versions| image:: https://img.shields.io/badge/python->3.8-blue
 .. |Documentation Status| image:: https://readthedocs.org/projects/lvmscp/badge/?version=latest
