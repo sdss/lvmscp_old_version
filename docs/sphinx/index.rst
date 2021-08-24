@@ -10,12 +10,14 @@ Contents
   getting-started
   Examples
 
-Actors
-------------
+.. toctree::
+  :caption: Actors
+  :maxdepth: 3
+  :hidden:
 
-lvmieb <https://lvmieb.readthedocs.io/en/latest/>
-lvmnps <https://lvmnps.readthedocs.io/en/latest/>
-archon <https://sdss-archon.readthedocs.io/en/latest/>
+  lvmieb <https://lvmieb.readthedocs.io/en/latest/>
+  lvmnps <https://lvmnps.readthedocs.io/en/latest/>
+  archon <https://sdss-archon.readthedocs.io/en/latest/>
 
 Indices and tables
 ------------------
