@@ -43,76 +43,76 @@ async def exposure(command, exptime: float, count: int, flavour: str):
 
     # lock for exposure sequence only running for one delegate
     async with exposure_lock:
-        
+
         command.info(text="Pinging . . .")
         err = await check_actor_ping(command, "lvmnps")
-        if err == True:
+        if err is True:
             command.info(text="lvmnps OK!")
             pass
         else:
             return command.fail(text=err)
-        
+
         err = await check_actor_ping(command, "archon")
-        if err == True:
+        if err is True:
             command.info(text="archon OK!")
             pass
         else:
-            return command.fail(text=err)        
-        
+            return command.fail(text=err)
+
         err = await check_actor_ping(command, "lvmieb")
-        if err == True:
+        if err is True:
             command.info(text="lvmieb OK!")
             pass
         else:
             return command.fail(text=err)
-        
+
         command.info(text="Checking device Power . . .")
         err = await check_device_power(command)
-        if err == True:
+        if err is True:
             command.info(text="device power OK!")
             pass
         else:
             return command.fail(text=err)
-        
+
         command.info(text="Checking Shutter Closed . . .")
         err = await check_shutter_closed(command)
-        if err == True:
+        if err is True:
             command.info(text="Shutter Closed!")
             pass
         else:
             return command.fail(text=err)
-        
+
         if flavour == "object" or flavour == "flat":
             command.info(text="Checking hartmann opened")
             err = await check_hartmann_opened(command)
-            if err == True:
+            if err is True:
                 pass
             else:
                 return command.fail(text=err)
-        
+
         command.info(text="Checking archon controller initialized . . .")
         err = await check_archon(command)
-        if err == True:
+        if err is True:
             command.info(text="archon initialized!")
             pass
         else:
-            return command.fail(text=err)        
+            return command.fail(text=err)
 
         if flavour == "flat":
             command.info(text="Checking flat lamps . . .")
             err = await check_flat_lamp(command)
-            if err == True:
+            if err is True:
                 command.info(text="flat lamps on!")
                 pass
             else:
                 return command.fail(text=err)
 
-        command.info(text="Starting the exposure.")        
+        command.info(text="Starting the exposure.")
         # start exposure loop
         for nn in range(count):
 
             command.info(f"Taking exposure {nn + 1} of {count}.")
-            
+
             header_json = await extra_header_telemetry(command)
 
             # Flushing before CCD exposure
@@ -181,9 +181,9 @@ async def exposure(command, exptime: float, count: int, flavour: str):
                     f"--header '{header_json}'",
                 )
             )
-            
+
             replies = archon_cmd.replies
-            
+
             if archon_cmd.status.did_fail:
                 command.info(replies[-1].body)
                 command.fail(text="Failed reading out exposure")
@@ -193,7 +193,9 @@ async def exposure(command, exptime: float, count: int, flavour: str):
                     readout_cmd = await command.actor.send_command("archon", "status")
                     await readout_cmd
                     readout_replies = readout_cmd.replies
-                    archon_readout = readout_replies[-2].body["status"]["status_names"][0]
+                    archon_readout = readout_replies[-2].body["status"]["status_names"][
+                        0
+                    ]
                     if archon_readout == "READING":
                         continue
                     else:
@@ -233,8 +235,9 @@ async def close_shutter_after(command, delay: float):
     command.info(text=f"Shutter is now '{shutter_status}'")
     return True
 
+
 async def check_actor_ping(command, actor_name):
-    
+
     # Check the actor is running
     try:
         status_cmd = await command.actor.send_command(actor_name, "ping")
@@ -246,13 +249,12 @@ async def check_actor_ping(command, actor_name):
         return status_cmd.status
     else:
         return True
-    
+
+
 async def check_device_power(command):
-    
+
     # check the power of the shutter & hartmann doors
-    wago_power_status_cmd = await command.actor.send_command(
-        "lvmieb", "wago getpower"
-    )
+    wago_power_status_cmd = await command.actor.send_command("lvmieb", "wago getpower")
     await wago_power_status_cmd
 
     if wago_power_status_cmd.status.did_fail:
@@ -271,12 +273,11 @@ async def check_device_power(command):
             return "Cannot start exposure : Right hartmann door power off"
         else:
             return True
-        
+
+
 async def check_shutter_closed(command):
     """Check the open/closed status of the shutter"""
-    shutter_status_cmd = await command.actor.send_command(
-        "lvmieb", "shutter status"
-    )
+    shutter_status_cmd = await command.actor.send_command("lvmieb", "shutter status")
     await shutter_status_cmd
 
     if shutter_status_cmd.status.did_fail:
@@ -289,29 +290,25 @@ async def check_shutter_closed(command):
             return "Shutter is already opened. The command will fail"
         else:
             return True
-        
+
+
 async def check_hartmann_opened(command):
     # Check the status (opened / closed) of the hartmann doors
-    hartmann_status_cmd = await command.actor.send_command(
-        "lvmieb", "hartmann status"
-    )
+    hartmann_status_cmd = await command.actor.send_command("lvmieb", "hartmann status")
     await hartmann_status_cmd
 
     if hartmann_status_cmd.status.did_fail:
         return "Failed to receive the status of the hartmann status"
-    else:        
+    else:
         replies = hartmann_status_cmd.replies
         hartmann_left_status = replies[-1].body["hartmann_left"]
         hartmann_right_status = replies[-1].body["hartmann_right"]
 
-        if not (
-            hartmann_left_status == "opened" and hartmann_right_status == "opened"
-        ):
+        if not (hartmann_left_status == "opened" and hartmann_right_status == "opened"):
             return "Hartmann doors are not opened for the science exposure"
         else:
             return True
 
-            
 
 async def check_archon(command):
     """Check the archon CCD status"""
@@ -326,6 +323,7 @@ async def check_archon(command):
             return "archon is not initialized"
         else:
             return True
+
 
 async def check_flat_lamp(command):
     """Check the flat lamp status"""
@@ -342,6 +340,7 @@ async def check_flat_lamp(command):
             return True
         else:
             return "flat lamp is off..."
+
 
 async def extra_header_telemetry(command):
     """telemetry from the devices and add it on the header"""
