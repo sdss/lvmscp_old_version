@@ -34,7 +34,7 @@ Finally, you can restart(stop -> start) the actor when the actor is running by t
 
 
 Interface with the Actor
-----------------------
+----------------------------------
 
 If you started the actor by the *lvmscp start* command, you can interface with the actor by the clu CLI(Command Line Interface) ::
 
@@ -61,24 +61,24 @@ Help command
           
 First you can confirm the existing commands of *lvmscp* by the *help* command ::
 
-lvmscp help
-03:16:18.048 lvmscp > 
-03:16:18.061 lvmscp : {
-    "help": [
-        "Usage: lvmscp [OPTIONS] COMMAND [ARGS]...",
-        "",
-        "Options:",
-        "  --help  Show this message and exit.",
-        "",
-        "Commands:",
-        "  exposure  Exposure command controlling all lower actors",
-        "  help      Shows the help.",
-        "  ping      Pings the actor.",
-        "  status    Receive all of the telemetry related to the spectrograph",
-        "  talk      talk to lower actors for engineering",
-        "  version   Reports the version."
-    ]
-}
+    lvmscp help
+    03:16:18.048 lvmscp > 
+    03:16:18.061 lvmscp : {
+        "help": [
+            "Usage: lvmscp [OPTIONS] COMMAND [ARGS]...",
+            "",
+            "Options:",
+            "  --help  Show this message and exit.",
+            "",
+            "Commands:",
+            "  exposure  Exposure command controlling all lower actors",
+            "  help      Shows the help.",
+            "  ping      Pings the actor.",
+            "  status    Receive all of the telemetry related to the spectrograph",
+            "  talk      talk to lower actors for engineering",
+            "  version   Reports the version."
+        ]
+    }
 
 
 
@@ -138,7 +138,7 @@ If you run the status command via lvmscp, you can receive the telemetry data of 
   lvmscp status
 
 
-  will return this kind of status data ::
+will return this kind of status data ::
 
   03:17:59.326 lvmscp > 
   03:18:00.465 lvmscp i {
@@ -343,3 +343,86 @@ Finally, we have the exposure command.
 The exposure command controls each devices(NPS, IEB, Archon controller) and runs the exposure sequence.
 The exposure sequence is shown on the diagram below.
 
+.. image:: _static/SCP_exposure.jpg
+    :align: center
+
+You can run the command as such syntax::
+
+    lvmscp exposure {count} {image_type} {number_of_images}
+
+
+If you run the lvmscp command, such interface will be run::
+
+    06:28:40.005 lvmscp > 
+    06:28:40.007 lvmscp i {
+        "text": "Pinging . . ."
+    }
+    06:28:40.010 lvmscp i {
+        "text": "lvmnps OK!"
+    }
+    06:28:40.018 lvmscp i {
+        "text": "archon OK!"
+    }
+    06:28:40.029 lvmscp i {
+        "text": "lvmieb OK!"
+    }
+    06:28:40.030 lvmscp i {
+        "text": "Checking device Power . . ."
+    }
+    06:28:40.074 lvmscp i {
+        "text": "device power OK!"
+    }
+    06:28:40.075 lvmscp i {
+        "text": "Checking Shutter Closed . . ."
+    }
+    06:28:40.101 lvmscp i {
+        "text": "Shutter Closed!"
+    }
+    06:28:40.102 lvmscp i {
+        "text": "Checking archon controller initialized . . ."
+    }
+    06:28:40.166 lvmscp i {
+        "text": "archon initialized!"
+    }
+    06:28:40.168 lvmscp i {
+        "text": "Starting the exposure."
+    }
+    06:28:40.169 lvmscp i {
+        "text": "Taking exposure 1 of 1."
+    }
+    06:28:44.601 lvmscp i {
+        "text": "Flushing"
+    }
+    06:28:46.008 lvmscp i {
+        "text": "Starting exposure in controllers sp1."
+    }
+    06:28:46.010 lvmscp i {
+        "text": "readout . . ."
+    }
+    06:29:37.426 lvmscp i {
+        "text": "readout finished!"
+    }
+    06:29:37.443 lvmscp i {
+        "text": "Saving HDUs."
+    }
+    06:29:37.445 lvmscp i {
+        "text": "File sdR-s-r1-00000609.fits.gz written to disk."
+    }
+    06:29:37.446 lvmscp i {
+        "filename": "/data/spectro/lvm/59452/sdR-s-r1-00000609.fits.gz"
+    }
+    06:29:37.448 lvmscp i {
+        "text": "File sdR-s-b1-00000609.fits.gz written to disk."
+    }
+    06:29:37.449 lvmscp i {
+        "filename": "/data/spectro/lvm/59452/sdR-s-b1-00000609.fits.gz"
+    }
+    06:29:37.451 lvmscp i {
+        "text": "File sdR-s-z1-00000609.fits.gz written to disk."
+    }
+    06:29:37.452 lvmscp i {
+        "filename": "/data/spectro/lvm/59452/sdR-s-z1-00000609.fits.gz"
+    }
+    06:29:37.454 lvmscp : {
+        "text": "Exposure sequence done!"
+    }
