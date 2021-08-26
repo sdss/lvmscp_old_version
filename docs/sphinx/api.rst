@@ -15,10 +15,10 @@ Actor
    :show-inheritance:
 
 
-Command functions
+Exposure functions
 -------------------
 
-.. automodule:: lvmscp.actor.commands
+.. automodule:: lvmscp.actor.commands.exposure
    :members:
    :undoc-members:
    :show-inheritance:

@@ -55,6 +55,13 @@ problems <https://github.com/pyenv/pyenv/wiki/Common-build-problems>`__.
     libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev \
     libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev python-openssl
 
+Clone this repository.
+::
+
+    $ git clone https://github.com/sdss/lvmscp
+    $ cd lvmscp
+
+
 Set the python 3.9.1 virtual environment.
 
 ::
@@ -76,7 +83,7 @@ more information, check
 Start the actor
 ~~~~~~~~~~~~~~~
 
-Start ``lvmscp`` actor.
+Start ``lvmscp`` actor inside your virtualenv directory.
 
 ::
 

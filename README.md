@@ -64,7 +64,7 @@ $ python create_setup.py
 $ pip install -e .
 ```
 
-Start `lvmscp` actor.
+Start `lvmscp` actor inside your virtualenv directory.
 ```
 $ lvmscp start
 ```

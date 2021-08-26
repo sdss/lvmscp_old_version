@@ -18,7 +18,7 @@
     <link rel="shortcut icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Examples with lvmscp" href="Examples.html" />
+    <link rel="next" title="Examples" href="Examples.html" />
     <link rel="prev" title="lvmscp documentation" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -86,6 +86,11 @@ libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncurses5-dev \
 libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev python-openssl
 </pre></div>
 </div>
+<p>Clone this repository.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/sdss/lvmscp
+$ cd lvmscp
+</pre></div>
+</div>
 <p>Set the python 3.9.1 virtual environment.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pyenv install 3.9.1
 $ pyenv virtualenv 3.9.1 lvmscp-with-3.9.1
@@ -103,7 +108,7 @@ $ pip install -e .
 </div>
 <div class="section" id="start-the-actor">
 <h3>Start the actor<a class="headerlink" href="#start-the-actor" title="Permalink to this headline">¶</a></h3>
-<p>Start <code class="docutils literal notranslate"><span class="pre">lvmscp</span></code> actor.</p>
+<p>Start <code class="docutils literal notranslate"><span class="pre">lvmscp</span></code> actor inside your virtualenv directory.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ lvmscp start
 </pre></div>
 </div>
@@ -177,7 +182,7 @@ lvmscp is using the AMQP Actor class from clu which is based on RabbitMQ protoco
 <li class="toctree-l2"><a class="reference internal" href="#architecture">Architecture</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples with lvmscp</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Examples.html">Examples</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Actors</span></p>
 <ul>
@@ -202,7 +207,7 @@ lvmscp is using the AMQP Actor class from clu which is based on RabbitMQ protoco
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="previous chapter">lvmscp documentation</a></li>
-      <li>Next: <a href="Examples.html" title="next chapter">Examples with lvmscp</a></li>
+      <li>Next: <a href="Examples.html" title="next chapter">Examples</a></li>
   </ul></li>
 </ul>
 </div>
