@@ -13,3 +13,12 @@ Actor
    :members:
    :undoc-members:
    :show-inheritance:
+
+
+Command functions
+-------------------
+
+.. automodule:: lvmscp.actor.commands
+   :members:
+   :undoc-members:
+   :show-inheritance:
