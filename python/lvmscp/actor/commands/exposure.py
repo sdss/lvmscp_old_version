@@ -8,16 +8,24 @@
 
 import asyncio
 import json
+import logging
 
 import click
+
+from sdsstools import get_logger
 
 from lvmscp.exceptions import lvmscpError
 
 from . import parser
 
 
+# logging
+log = get_logger("sdss-lvmscp")
+
 # lock for exposure lock
 exposure_lock = asyncio.Lock()
+
+log.sh.setLevel(logging.DEBUG)
 
 
 @parser.command()
@@ -39,84 +47,112 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
     """Exposure command controlling all lower actors"""
 
     # Check the exposure time input (bias = 0.0)
+    log.debug("Checking exposure time")
     if flavour != "bias" and exptime is None:
+        log.error("EXPOSURE-TIME is required unless --flavour=bias.")
         raise click.UsageError("EXPOSURE-TIME is required unless --flavour=bias.")
     elif flavour == "bias":
         exptime = 0.0
 
     if exptime < 0.0:
+        log.error("EXPOSURE-TIME cannot be negative")
         raise click.UsageError("EXPOSURE-TIME cannot be negative")
 
     # lock for exposure sequence only running for one delegate
     async with exposure_lock:
 
+        log.debug("Pinging lower actors . . .")
         command.info(text="Pinging . . .")
         err = await check_actor_ping(command, "lvmnps")
         if err is True:
+            log.info("lvmnps OK!")
             command.info(text="lvmnps OK!")
             pass
         else:
+            log.error(err)
             return command.fail(text=err)
 
         err = await check_actor_ping(command, "archon")
         if err is True:
+            log.info("archon OK!")
             command.info(text="archon OK!")
             pass
         else:
+            log.error(err)
             return command.fail(text=err)
 
         err = await check_actor_ping(command, "lvmieb")
         if err is True:
+            log.info("lvmieb OK!")
             command.info(text="lvmieb OK!")
             pass
         else:
+            log.error(err)
             return command.fail(text=err)
 
+        log.debug("Checking device Power . . .")
         command.info(text="Checking device Power . . .")
         err = await check_device_power(command, spectro)
         if err is True:
+            log.info("device power OK!")
             command.info(text="device power OK!")
             pass
         else:
+            log.error(err)
             return command.fail(text=err)
 
+        log.debug("Checking Shutter closed . . .")
         command.info(text="Checking Shutter Closed . . .")
         err = await check_shutter_closed(command, spectro)
         if err is True:
+            log.info("Shutter Closed!")
             command.info(text="Shutter Closed!")
             pass
         else:
+            log.error(err)
             return command.fail(text=err)
 
         if flavour == "object" or flavour == "flat":
-            command.info(text="Checking hartmann opened")
+            log.debug("Checking hartmann opened . . .")
+            command.info(text="Checking hartmann opened . . .")
             err = await check_hartmann_opened(command, spectro)
             if err is True:
+                log.info("Hartmann doors opened!")
+                command.info(text="Hartmann doors opened!")
                 pass
             else:
+                log.error(err)
                 return command.fail(text=err)
 
+        log.debug("Checking archon controller initialized . . .")
         command.info(text="Checking archon controller initialized . . .")
         err = await check_archon(command, spectro)
         if err is True:
+            log.info("archon initialized!")
             command.info(text="archon initialized!")
             pass
         else:
+            log.error(err)
             return command.fail(text=err)
 
         if flavour == "flat":
+            log.debug("Checking flat lamps . . .")
             command.info(text="Checking flat lamps . . .")
             err = await check_flat_lamp(command)
             if err is True:
+                log.info("flat lamps on!")
                 command.info(text="flat lamps on!")
                 pass
             else:
+                log.error(err)
                 return command.fail(text=err)
 
+        log.info("Starting the exposure.")
         command.info(text="Starting the exposure.")
         # start exposure loop
         for nn in range(count):
 
+            log.info(f"Taking exposure {nn + 1} of {count}.")
             command.info(f"Taking exposure {nn + 1} of {count}.")
 
             header_json = await extra_header_telemetry(command, spectro)
@@ -124,16 +160,19 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
             # Flushing before CCD exposure
             flush_count = 1
             if flush_count > 0:
-                command.info("Flushing")
+                log.info("Flushing . . .")
+                command.info("Flushing . . .")
                 archon_cmd = await (
                     await command.actor.send_command(
                         "archon", f"flush {flush_count} {spectro}"
                     )
                 )
                 if archon_cmd.status.did_fail:
+                    log.error("Failed flushing")
                     return command.fail(text="Failed flushing")
 
             # Start CCD exposure
+            log.debug("Start CCD exposure . . .")
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
@@ -142,16 +181,18 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
             )
             if archon_cmd.status.did_fail:
                 await command.actor.send_command("archon", "expose abort --flush")
+                log.error("Failed starting exposure. Trying to abort and exiting.")
                 return command.fail(
                     text="Failed starting exposure. Trying to abort and exiting."
                 )
             else:
                 reply = archon_cmd.replies
+                log.debug(reply[-2].body["text"])
                 command.info(text=reply[-2].body["text"])
 
             if (flavour != "bias" and flavour != "dark") and exptime > 0:
                 # Use command to access the actor and command the shutter
-
+                log.info("Opening the shutter")
                 command.info("Opening the shutter")
 
                 shutter_cmd = await command.actor.send_command(
@@ -164,16 +205,18 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
                         "lvmieb", f"shutter close {spectro}"
                     )
                     await command.actor.send_command("archon", "expose abort --flush")
+                    log.error("Shutter failed to open")
                     return command.fail(text="Shutter failed to open")
 
                 # Report status of the shutter
                 replies = shutter_cmd.replies
                 shutter_status = replies[-1].body["shutter"]
                 if shutter_status not in ["opened", "closed"]:
+                    log.error(f"Unknown shutter status {shutter_status!r}.")
                     return command.fail(
                         text=f"Unknown shutter status {shutter_status!r}."
                     )
-
+                log.info("Shutter is now {shutter_status!r}.")
                 command.info(f"Shutter is now {shutter_status!r}.")
 
                 if not (
@@ -182,12 +225,15 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
                     )
                 ):
                     await command.actor.send_command("archon", "expose abort --flush")
+                    log.error("Failed to close the shutter")
                     return command.fail(text="Failed to close the shutter")
 
             # Readout pending information
+            log.debug("readout . . .")
             command.info(text="readout . . .")
 
             # Finish exposure
+            log.debug("archon expose finish --header")
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
@@ -200,6 +246,8 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
 
             if archon_cmd.status.did_fail:
                 command.info(replies[-1].body)
+                log.info(replies[-1].body)
+                log.error("Failed reading out exposure")
                 command.fail(text="Failed reading out exposure")
             else:
                 # For monitering the status
@@ -226,28 +274,34 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
                 command.info(replies[-3].body)
                 command.info(replies[-2].body)
 
+        log.info("Exposure Sequence done!")
         return command.finish(text="Exposure sequence done!")
 
 
 async def close_shutter_after(command, delay: float, spectro: str):
     """Waits ``delay`` before closing the shutter."""
 
+    log.info("exposing . . .")
     command.info(text="exposing . . .")
     await asyncio.sleep(delay)
 
+    log.info("Closing the shutter")
     command.info(text="Closing the shutter")
     shutter_cmd = await command.actor.send_command("lvmieb", f"shutter close {spectro}")
     await shutter_cmd
 
     if shutter_cmd.status.did_fail:
+        log.error("Shutter failed to close.")
         command.fail(text="Shutter failed to close.")
         return False
 
     replies = shutter_cmd.replies
     shutter_status = replies[-1].body["shutter"]
     if shutter_status not in ["opened", "closed"]:
+        log.error(f"Unknown shutter status {shutter_status!r}.")
         return command.fail(text=f"Unknown shutter status {shutter_status!r}.")
 
+    log.info(f"Shutter is now '{shutter_status}'")
     command.info(text=f"Shutter is now '{shutter_status}'")
     return True
 

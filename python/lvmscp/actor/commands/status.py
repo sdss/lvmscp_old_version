@@ -1,9 +1,18 @@
 import asyncio
+import logging
 
 import click
 from clu.command import Command
 
+from sdsstools import get_logger
+
 from . import parser
+
+
+# logging
+log = get_logger("sdss-lvmscp")
+
+log.sh.setLevel(logging.DEBUG)
 
 
 @parser.command()
@@ -132,6 +141,7 @@ async def status(command: Command, spectro: str):
         b1_temperature = replies[-1].body["b1_temperature"]
         z1_temperature = replies[-1].body["z1_temperature"]
 
+    log.info("status logged successfully!")
     command.info(
         IEB_POWER={
             "shutter_power_status": shutter_power_status,
