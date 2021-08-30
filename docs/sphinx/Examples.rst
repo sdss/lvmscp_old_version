@@ -133,9 +133,10 @@ Then this will return ::
 Status command
 ----------------------
   
-If you run the status command via lvmscp, you can receive the telemetry data of the lower devices ::
+If you run the status command via lvmscp, you can receive the telemetry data of the lower devices
+The default spectrograph is "sp1", the spectrograph on the carnegie lab for AI&T. ::
 
-  lvmscp status
+  lvmscp status {spectrograph}
 
 
 will return this kind of status data ::
@@ -346,9 +347,14 @@ The exposure sequence is shown on the diagram below.
 .. image:: _static/SCP_exposure.jpg
     :align: center
 
-You can run the command as such syntax::
+You can run the command as such syntax. ::
 
-    lvmscp exposure {count} {image_type} {number_of_images}
+    lvmscp exposure {count} {image_type} {exposure_time} {spectrograph}
+
+    
+For example, ::
+
+    lvmscp exposure 1 object 30 sp1
 
 
 If you run the lvmscp command, such interface will be run::

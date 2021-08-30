@@ -1,14 +1,22 @@
 import asyncio
 
+import click
 from clu.command import Command
 
 from . import parser
 
 
 @parser.command()
-async def status(command: Command):
+@click.argument(
+    "spectro",
+    type=click.Choice(["sp1", "sp2", "sp3"]),
+    default="sp1",
+    required=False,
+)
+async def status(command: Command, spectro: str):
     """Receive all of the telemetry related to the spectrograph"""
     # check the power of the network power switch
+
     nps_status_cmd = await command.actor.send_command("lvmnps", "status all")
     await nps_status_cmd
 
@@ -18,7 +26,14 @@ async def status(command: Command):
         nps_replies = nps_status_cmd.replies
 
     # check the power of the shutter & hartmann doors
-    wago_power_status_cmd = await command.actor.send_command("lvmieb", "wago getpower")
+
+    shutter_power_status = "ERROR"
+    hartmann_left_power_status = "ERROR"
+    hartmann_right_power_status = "ERROR"
+
+    wago_power_status_cmd = await command.actor.send_command(
+        "lvmieb", f"wago getpower {spectro}"
+    )
     await wago_power_status_cmd
 
     if wago_power_status_cmd.status.did_fail:
@@ -31,7 +46,9 @@ async def status(command: Command):
 
     # Check the status (opened / closed) of the shutter
     shutter_status = "ERROR"
-    shutter_status_cmd = await command.actor.send_command("lvmieb", "shutter status")
+    shutter_status_cmd = await command.actor.send_command(
+        "lvmieb", f"shutter status {spectro}"
+    )
     await shutter_status_cmd
 
     if shutter_status_cmd.status.did_fail:
@@ -44,7 +61,9 @@ async def status(command: Command):
     hartmann_left_status = "ERROR"
     hartmann_right_status = "ERROR"
 
-    hartmann_status_cmd = await command.actor.send_command("lvmieb", "hartmann status")
+    hartmann_status_cmd = await command.actor.send_command(
+        "lvmieb", f"hartmann status {spectro}"
+    )
     await hartmann_status_cmd
 
     if hartmann_status_cmd.status.did_fail:
@@ -55,8 +74,20 @@ async def status(command: Command):
         hartmann_right_status = replies[-1].body["hartmann_right"]
 
     # Check the status of the wago module (wago status)
+
+    rhtRH1 = "ERROR"
+    rhtT1 = "ERROR"
+    rhtRH2 = "ERROR"
+    rhtT2 = "ERROR"
+    rhtRH3 = "ERROR"
+    rhtT3 = "ERROR"
+    rtd1 = "ERROR"
+    rtd2 = "ERROR"
+    rtd3 = "ERROR"
+    rtd4 = "ERROR"
+
     wago_telemetry_status_cmd = await command.actor.send_command(
-        "lvmieb", "wago status"
+        "lvmieb", f"wago status {spectro}"
     )
     await wago_telemetry_status_cmd
 
@@ -85,7 +116,7 @@ async def status(command: Command):
     z1_temperature = "ERROR"
 
     transducer_status_cmd = await asyncio.wait_for(
-        command.actor.send_command("lvmieb", "transducer status"), 1
+        command.actor.send_command("lvmieb", f"transducer status {spectro}"), 1
     )
     await transducer_status_cmd
 
