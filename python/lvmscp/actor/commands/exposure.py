@@ -29,7 +29,13 @@ exposure_lock = asyncio.Lock()
     required=False,
 )
 @click.argument("EXPTIME", type=float, required=False)
-async def exposure(command, exptime: float, count: int, flavour: str):
+@click.argument(
+    "spectro",
+    type=click.Choice(["sp1", "sp2", "sp3"]),
+    default="sp1",
+    required=False,
+)
+async def exposure(command, exptime: float, count: int, flavour: str, spectro: str):
     """Exposure command controlling all lower actors"""
 
     # Check the exposure time input (bias = 0.0)
@@ -67,7 +73,7 @@ async def exposure(command, exptime: float, count: int, flavour: str):
             return command.fail(text=err)
 
         command.info(text="Checking device Power . . .")
-        err = await check_device_power(command)
+        err = await check_device_power(command, spectro)
         if err is True:
             command.info(text="device power OK!")
             pass
@@ -75,7 +81,7 @@ async def exposure(command, exptime: float, count: int, flavour: str):
             return command.fail(text=err)
 
         command.info(text="Checking Shutter Closed . . .")
-        err = await check_shutter_closed(command)
+        err = await check_shutter_closed(command, spectro)
         if err is True:
             command.info(text="Shutter Closed!")
             pass
@@ -84,14 +90,14 @@ async def exposure(command, exptime: float, count: int, flavour: str):
 
         if flavour == "object" or flavour == "flat":
             command.info(text="Checking hartmann opened")
-            err = await check_hartmann_opened(command)
+            err = await check_hartmann_opened(command, spectro)
             if err is True:
                 pass
             else:
                 return command.fail(text=err)
 
         command.info(text="Checking archon controller initialized . . .")
-        err = await check_archon(command)
+        err = await check_archon(command, spectro)
         if err is True:
             command.info(text="archon initialized!")
             pass
@@ -113,14 +119,16 @@ async def exposure(command, exptime: float, count: int, flavour: str):
 
             command.info(f"Taking exposure {nn + 1} of {count}.")
 
-            header_json = await extra_header_telemetry(command)
+            header_json = await extra_header_telemetry(command, spectro)
 
             # Flushing before CCD exposure
             flush_count = 1
             if flush_count > 0:
                 command.info("Flushing")
                 archon_cmd = await (
-                    await command.actor.send_command("archon", f"flush {flush_count}")
+                    await command.actor.send_command(
+                        "archon", f"flush {flush_count} {spectro}"
+                    )
                 )
                 if archon_cmd.status.did_fail:
                     return command.fail(text="Failed flushing")
@@ -129,7 +137,7 @@ async def exposure(command, exptime: float, count: int, flavour: str):
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
-                    f"expose start --{flavour} {exptime}",
+                    f"expose start {spectro} --{flavour} {exptime}",
                 )
             )
             if archon_cmd.status.did_fail:
@@ -146,11 +154,15 @@ async def exposure(command, exptime: float, count: int, flavour: str):
 
                 command.info("Opening the shutter")
 
-                shutter_cmd = await command.actor.send_command("lvmieb", "shutter open")
+                shutter_cmd = await command.actor.send_command(
+                    "lvmieb", f"shutter open {spectro}"
+                )
                 await shutter_cmd
 
                 if shutter_cmd.status.did_fail:
-                    await command.actor.send_command("lvmieb", "shutter close")
+                    await command.actor.send_command(
+                        "lvmieb", f"shutter close {spectro}"
+                    )
                     await command.actor.send_command("archon", "expose abort --flush")
                     return command.fail(text="Shutter failed to open")
 
@@ -165,7 +177,9 @@ async def exposure(command, exptime: float, count: int, flavour: str):
                 command.info(f"Shutter is now {shutter_status!r}.")
 
                 if not (
-                    await asyncio.create_task(close_shutter_after(command, exptime))
+                    await asyncio.create_task(
+                        close_shutter_after(command, exptime, spectro)
+                    )
                 ):
                     await command.actor.send_command("archon", "expose abort --flush")
                     return command.fail(text="Failed to close the shutter")
@@ -190,7 +204,9 @@ async def exposure(command, exptime: float, count: int, flavour: str):
             else:
                 # For monitering the status
                 while True:
-                    readout_cmd = await command.actor.send_command("archon", "status")
+                    readout_cmd = await command.actor.send_command(
+                        "archon", f"status {spectro}"
+                    )
                     await readout_cmd
                     readout_replies = readout_cmd.replies
                     archon_readout = readout_replies[-2].body["status"]["status_names"][
@@ -213,14 +229,14 @@ async def exposure(command, exptime: float, count: int, flavour: str):
         return command.finish(text="Exposure sequence done!")
 
 
-async def close_shutter_after(command, delay: float):
+async def close_shutter_after(command, delay: float, spectro: str):
     """Waits ``delay`` before closing the shutter."""
 
     command.info(text="exposing . . .")
     await asyncio.sleep(delay)
 
     command.info(text="Closing the shutter")
-    shutter_cmd = await command.actor.send_command("lvmieb", "shutter close")
+    shutter_cmd = await command.actor.send_command("lvmieb", f"shutter close {spectro}")
     await shutter_cmd
 
     if shutter_cmd.status.did_fail:
@@ -251,10 +267,12 @@ async def check_actor_ping(command, actor_name):
         return True
 
 
-async def check_device_power(command):
+async def check_device_power(command, spectro: str):
 
     # check the power of the shutter & hartmann doors
-    wago_power_status_cmd = await command.actor.send_command("lvmieb", "wago getpower")
+    wago_power_status_cmd = await command.actor.send_command(
+        "lvmieb", f"wago getpower {spectro}"
+    )
     await wago_power_status_cmd
 
     if wago_power_status_cmd.status.did_fail:
@@ -275,9 +293,11 @@ async def check_device_power(command):
             return True
 
 
-async def check_shutter_closed(command):
+async def check_shutter_closed(command, spectro: str):
     """Check the open/closed status of the shutter"""
-    shutter_status_cmd = await command.actor.send_command("lvmieb", "shutter status")
+    shutter_status_cmd = await command.actor.send_command(
+        "lvmieb", f"shutter status {spectro}"
+    )
     await shutter_status_cmd
 
     if shutter_status_cmd.status.did_fail:
@@ -292,9 +312,11 @@ async def check_shutter_closed(command):
             return True
 
 
-async def check_hartmann_opened(command):
+async def check_hartmann_opened(command, spectro: str):
     # Check the status (opened / closed) of the hartmann doors
-    hartmann_status_cmd = await command.actor.send_command("lvmieb", "hartmann status")
+    hartmann_status_cmd = await command.actor.send_command(
+        "lvmieb", f"hartmann status {spectro}"
+    )
     await hartmann_status_cmd
 
     if hartmann_status_cmd.status.did_fail:
@@ -310,10 +332,10 @@ async def check_hartmann_opened(command):
             return True
 
 
-async def check_archon(command):
+async def check_archon(command, spectro: str):
     """Check the archon CCD status"""
     # Check that the configuration of archon controller has been loaded.
-    archon_cmd = await (await command.actor.send_command("archon", "status"))
+    archon_cmd = await (await command.actor.send_command("archon", f"status {spectro}"))
     if archon_cmd.status.did_fail:
         return "Failed getting status from the controller"
     else:
@@ -342,10 +364,10 @@ async def check_flat_lamp(command):
             return "flat lamp is off..."
 
 
-async def extra_header_telemetry(command):
+async def extra_header_telemetry(command, spectro: str):
     """telemetry from the devices and add it on the header"""
     # Build extra header.
-    scp_status_cmd = await command.actor.send_command("lvmscp", "status")
+    scp_status_cmd = await command.actor.send_command("lvmscp", f"status {spectro}")
     await scp_status_cmd
 
     if scp_status_cmd.status.did_fail:
