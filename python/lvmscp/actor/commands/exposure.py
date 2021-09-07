@@ -24,7 +24,6 @@ log = get_logger("sdss-lvmscp")
 
 # lock for exposure lock
 exposure_lock = asyncio.Lock()
-
 log.sh.setLevel(logging.DEBUG)
 
 
@@ -43,7 +42,17 @@ log.sh.setLevel(logging.DEBUG)
     default="sp1",
     required=False,
 )
-async def exposure(command, exptime: float, count: int, flavour: str, spectro: str):
+@click.option(
+    "--flush",
+    "flush",
+    flag_value="yes",
+    default="no",
+    required=False,
+    help="Flush before the exposure",
+)
+async def exposure(
+    command, exptime: float, count: int, flavour: str, spectro: str, flush: str
+):
     """Exposure command controlling all lower actors"""
 
     # Check the exposure time input (bias = 0.0)
@@ -112,7 +121,7 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
             log.error(err)
             return command.fail(text=err)
 
-        if flavour == "object" or flavour == "flat":
+        if flavour == "object":
             log.debug("Checking hartmann opened . . .")
             command.info(text="Checking hartmann opened . . .")
             err = await check_hartmann_opened(command, spectro)
@@ -158,18 +167,19 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
             header_json = await extra_header_telemetry(command, spectro)
 
             # Flushing before CCD exposure
-            flush_count = 1
-            if flush_count > 0:
-                log.info("Flushing . . .")
-                command.info("Flushing . . .")
-                archon_cmd = await (
-                    await command.actor.send_command(
-                        "archon", f"flush {flush_count} {spectro}"
+            if flush == "yes":
+                flush_count = 1
+                if flush_count > 0:
+                    log.info("Flushing . . .")
+                    command.info("Flushing . . .")
+                    archon_cmd = await (
+                        await command.actor.send_command(
+                            "archon", f"flush {flush_count} {spectro}"
+                        )
                     )
-                )
-                if archon_cmd.status.did_fail:
-                    log.error("Failed flushing")
-                    return command.fail(text="Failed flushing")
+                    if archon_cmd.status.did_fail:
+                        log.error("Failed flushing")
+                        return command.fail(text="Failed flushing")
 
             # Start CCD exposure
             log.debug("Start CCD exposure . . .")
@@ -212,12 +222,12 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
                 replies = shutter_cmd.replies
                 shutter_status = replies[-1].body["shutter"]
                 if shutter_status not in ["opened", "closed"]:
-                    log.error(f"Unknown shutter status {shutter_status!r}.")
+                    log.error(f"Unknown shutter status {shutter_status}.")
                     return command.fail(
-                        text=f"Unknown shutter status {shutter_status!r}."
+                        text=f"Unknown shutter status {shutter_status}."
                     )
-                log.info("Shutter is now {shutter_status!r}.")
-                command.info(f"Shutter is now {shutter_status!r}.")
+                log.info("Shutter is now {shutter_status}.")
+                command.info(f"Shutter is now {shutter_status}.")
 
                 if not (
                     await asyncio.create_task(
@@ -227,6 +237,8 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
                     await command.actor.send_command("archon", "expose abort --flush")
                     log.error("Failed to close the shutter")
                     return command.fail(text="Failed to close the shutter")
+            elif flavour == "dark":
+                await asyncio.create_task(stop_exposure_after(command, exptime))
 
             # Readout pending information
             log.debug("readout . . .")
@@ -276,6 +288,15 @@ async def exposure(command, exptime: float, count: int, flavour: str, spectro: s
 
         log.info("Exposure Sequence done!")
         return command.finish(text="Exposure sequence done!")
+
+
+async def stop_exposure_after(command, delay: float):
+    """Waits ``delay`` before closing the shutter."""
+
+    command.info(text="dark exposing . . .")
+    await asyncio.sleep(delay)
+
+    return True
 
 
 async def close_shutter_after(command, delay: float, spectro: str):
@@ -403,19 +424,24 @@ async def check_archon(command, spectro: str):
 
 async def check_flat_lamp(command):
     """Check the flat lamp status"""
-    flat_lamp_cmd = await (
-        await command.actor.send_command("lvmnps", "status what Krypton")
-    )
+
+    check_lamp = []
+
+    flat_lamp_cmd = await (await command.actor.send_command("lvmnps", "status all"))
     if flat_lamp_cmd.status.did_fail:
         return "Failed getting status from the network power switch"
     else:
         replies = flat_lamp_cmd.replies
-        check_lamp = replies[-2].body["STATUS"]["DLI-NPS-03"]["Krypton"]["STATE"]
-        if check_lamp:
-            command.info(text="flat lamp is on!")
-            return True
-        else:
-            return "flat lamp is off..."
+        check_lamp.append(replies[-2].body["STATUS"]["DLI-NPS-03"]["Argon"]["STATE"])
+        check_lamp.append(replies[-2].body["STATUS"]["DLI-NPS-03"]["Krypton"]["STATE"])
+        check_lamp.append(replies[-2].body["STATUS"]["DLI-NPS-03"]["Neon"]["STATE"])
+        check_lamp.append(replies[-2].body["STATUS"]["DLI-NPS-03"]["LDLS"]["STATE"])
+        for n in check_lamp:
+            if n:
+                command.info(text="flat lamp is on!")
+                return True
+            else:
+                return "flat lamp is off..."
 
 
 async def extra_header_telemetry(command, spectro: str):
