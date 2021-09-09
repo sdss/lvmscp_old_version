@@ -33,8 +33,8 @@ async def set(command, request: str, spectro: str):
         return "Failed to receive the status of the hartmann status"
     else:
         replies = hartmann_status_cmd.replies
-        hartmann_left_status = replies[-1].body["hartmann_left"]
-        hartmann_right_status = replies[-1].body["hartmann_right"]
+        hartmann_left_status = replies[-2].body[spectro]["hartmann_left"]
+        hartmann_right_status = replies[-2].body[spectro]["hartmann_right"]
 
     # Makes the status only the right door opened
     if request == "right":
@@ -107,8 +107,8 @@ async def set(command, request: str, spectro: str):
         command.info(text="Failed to receive the status of the hartmann status")
     else:
         replies = hartmann_status_cmd.replies
-        hartmann_left_status = replies[-1].body["hartmann_left"]
-        hartmann_right_status = replies[-1].body["hartmann_right"]
+        hartmann_left_status = replies[-2].body[spectro]["hartmann_left"]
+        hartmann_right_status = replies[-2].body[spectro]["hartmann_right"]
 
     command.info(
         HARTMANN={

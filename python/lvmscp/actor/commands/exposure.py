@@ -220,7 +220,7 @@ async def exposure(
 
                 # Report status of the shutter
                 replies = shutter_cmd.replies
-                shutter_status = replies[-1].body["shutter"]
+                shutter_status = replies[-2].body[spectro]["shutter"]
                 if shutter_status not in ["opened", "closed"]:
                     log.error(f"Unknown shutter status {shutter_status}.")
                     return command.fail(
@@ -317,7 +317,7 @@ async def close_shutter_after(command, delay: float, spectro: str):
         return False
 
     replies = shutter_cmd.replies
-    shutter_status = replies[-1].body["shutter"]
+    shutter_status = replies[-2].body[spectro]["shutter"]
     if shutter_status not in ["opened", "closed"]:
         log.error(f"Unknown shutter status {shutter_status!r}.")
         return command.fail(text=f"Unknown shutter status {shutter_status!r}.")
@@ -354,9 +354,9 @@ async def check_device_power(command, spectro: str):
         return "Failed to receive the power status from wago relays"
     else:
         replies = wago_power_status_cmd.replies
-        shutter_power_status = replies[-1].body["shutter_power"]
-        hartmann_left_power_status = replies[-1].body["hartmann_left_power"]
-        hartmann_right_power_status = replies[-1].body["hartmann_right_power"]
+        shutter_power_status = replies[-2].body[spectro]["shutter_power"]
+        hartmann_left_power_status = replies[-2].body[spectro]["hartmann_left_power"]
+        hartmann_right_power_status = replies[-2].body[spectro]["hartmann_right_power"]
 
         if shutter_power_status == "OFF":
             return "Cannot start exposure : Exposure shutter power off"
@@ -379,7 +379,7 @@ async def check_shutter_closed(command, spectro: str):
         return "Failed to receive the status of the shutter status"
     else:
         replies = shutter_status_cmd.replies
-        shutter_status_before = replies[-1].body["shutter"]
+        shutter_status_before = replies[-2].body[spectro]["shutter"]
 
         if shutter_status_before != "closed":
             return "Shutter is already opened. The command will fail"
@@ -398,8 +398,8 @@ async def check_hartmann_opened(command, spectro: str):
         return "Failed to receive the status of the hartmann status"
     else:
         replies = hartmann_status_cmd.replies
-        hartmann_left_status = replies[-1].body["hartmann_left"]
-        hartmann_right_status = replies[-1].body["hartmann_right"]
+        hartmann_left_status = replies[-2].body[spectro]["hartmann_left"]
+        hartmann_right_status = replies[-2].body[spectro]["hartmann_right"]
 
         if not (hartmann_left_status == "opened" and hartmann_right_status == "opened"):
             return "Hartmann doors are not opened for the science exposure"
@@ -454,16 +454,16 @@ async def extra_header_telemetry(command, spectro: str):
         return "Failed to receive the status of the lvmscp"
     else:
         replies = scp_status_cmd.replies
-        rhtRH1 = replies[-2].body["IEB_HUMIDITY"]["rhtRH1"]
-        rhtRH2 = replies[-2].body["IEB_HUMIDITY"]["rhtRH2"]
-        rhtRH3 = replies[-2].body["IEB_HUMIDITY"]["rhtRH3"]
-        rhtT1 = replies[-2].body["IEB_TEMPERATURE"]["rhtT1"]
-        rhtT2 = replies[-2].body["IEB_TEMPERATURE"]["rhtT2"]
-        rhtT3 = replies[-2].body["IEB_TEMPERATURE"]["rhtT3"]
-        rtd1 = replies[-2].body["IEB_TEMPERATURE"]["rtd1"]
-        rtd2 = replies[-2].body["IEB_TEMPERATURE"]["rtd2"]
-        rtd3 = replies[-2].body["IEB_TEMPERATURE"]["rtd3"]
-        rtd4 = replies[-2].body["IEB_TEMPERATURE"]["rtd4"]
+        rhtRH1 = replies[-2].body[spectro]["IEB_HUMIDITY"]["rhtRH1"]
+        rhtRH2 = replies[-2].body[spectro]["IEB_HUMIDITY"]["rhtRH2"]
+        rhtRH3 = replies[-2].body[spectro]["IEB_HUMIDITY"]["rhtRH3"]
+        rhtT1 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rhtT1"]
+        rhtT2 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rhtT2"]
+        rhtT3 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rhtT3"]
+        rtd1 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rtd1"]
+        rtd2 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rtd2"]
+        rtd3 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rtd3"]
+        rtd4 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rtd4"]
 
         if replies[-2].body["NETWORK_POWER_SWITCHES"]["STATUS"]["DLI-NPS-02"][
             "LN2 NIR valve"

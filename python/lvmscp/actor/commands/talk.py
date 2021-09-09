@@ -27,7 +27,7 @@ async def lvmieb(command: Command, message):
         return command.fail(text=lvmieb_status_cmd.status)
 
     replies = lvmieb_status_cmd.replies
-    command.finish(replies[-1].body)
+    command.finish(replies[-2].body)
 
 
 @talk.command()
