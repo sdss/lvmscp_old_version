@@ -7,6 +7,7 @@
 # @License: BSD 3-clause (http://www.opensource.org/licenses/BSD-3-Clause)
 
 import asyncio
+import datetime
 import json
 import logging
 
@@ -45,7 +46,6 @@ log.sh.setLevel(logging.DEBUG)
 @click.option(
     "--flush",
     "flush",
-    flag_value="yes",
     default="no",
     required=False,
     help="Flush before the exposure",
@@ -56,7 +56,7 @@ async def exposure(
     """Exposure command controlling all lower actors"""
 
     # Check the exposure time input (bias = 0.0)
-    log.debug("Checking exposure time")
+    log.debug(f"{pretty(datetime.datetime.now())} | Checking exposure time")
     if flavour != "bias" and exptime is None:
         log.error("EXPOSURE-TIME is required unless --flavour=bias.")
         raise click.UsageError("EXPOSURE-TIME is required unless --flavour=bias.")
@@ -70,11 +70,11 @@ async def exposure(
     # lock for exposure sequence only running for one delegate
     async with exposure_lock:
 
-        log.debug("Pinging lower actors . . .")
+        log.debug(f"{pretty(datetime.datetime.now())} | Pinging lower actors . . .")
         command.info(text="Pinging . . .")
         err = await check_actor_ping(command, "lvmnps")
         if err is True:
-            log.info("lvmnps OK!")
+            log.info(f"{pretty(datetime.datetime.now())} | lvmnps OK!")
             command.info(text="lvmnps OK!")
             pass
         else:
@@ -83,7 +83,7 @@ async def exposure(
 
         err = await check_actor_ping(command, "archon")
         if err is True:
-            log.info("archon OK!")
+            log.info(f"{pretty(datetime.datetime.now())} | archon OK!")
             command.info(text="archon OK!")
             pass
         else:
@@ -92,7 +92,7 @@ async def exposure(
 
         err = await check_actor_ping(command, "lvmieb")
         if err is True:
-            log.info("lvmieb OK!")
+            log.info(f"{pretty(datetime.datetime.now())} | lvmieb OK!")
             command.info(text="lvmieb OK!")
             pass
         else:
@@ -147,12 +147,13 @@ async def exposure(
         if flavour == "flat":
             log.debug("Checking flat lamps . . .")
             command.info(text="Checking flat lamps . . .")
-            err = await check_flat_lamp(command)
-            if err is True:
-                log.info("flat lamps on!")
-                command.info(text="flat lamps on!")
-                pass
-            else:
+
+            try:
+                lamps_on = await check_flat_lamp(command)
+                for key, value in lamps_on.items():
+                    log.info("{key} arc lamps on!")
+                    command.info(text=f"{key} arc lamps on!")
+            except Exception as err:
                 log.error(err)
                 return command.fail(text=err)
 
@@ -174,7 +175,7 @@ async def exposure(
                     command.info("Flushing . . .")
                     archon_cmd = await (
                         await command.actor.send_command(
-                            "archon", f"flush {flush_count} {spectro}"
+                            "archon", f"flush {flush_count}"
                         )
                     )
                     if archon_cmd.status.did_fail:
@@ -191,7 +192,9 @@ async def exposure(
             )
             if archon_cmd.status.did_fail:
                 await command.actor.send_command("archon", "expose abort --flush")
-                log.error("Failed starting exposure. Trying to abort and exiting.")
+                log.error(
+                    f"{pretty2(datetime.datetime.now())} | Failed starting exposure. Trying to abort and exiting."
+                )
                 return command.fail(
                     text="Failed starting exposure. Trying to abort and exiting."
                 )
@@ -264,9 +267,7 @@ async def exposure(
             else:
                 # For monitering the status
                 while True:
-                    readout_cmd = await command.actor.send_command(
-                        "archon", f"status {spectro}"
-                    )
+                    readout_cmd = await command.actor.send_command("archon", f"status")
                     await readout_cmd
                     readout_replies = readout_cmd.replies
                     archon_readout = readout_replies[-2].body["status"]["status_names"][
@@ -410,7 +411,7 @@ async def check_hartmann_opened(command, spectro: str):
 async def check_archon(command, spectro: str):
     """Check the archon CCD status"""
     # Check that the configuration of archon controller has been loaded.
-    archon_cmd = await (await command.actor.send_command("archon", f"status {spectro}"))
+    archon_cmd = await (await command.actor.send_command("archon", f"status"))
     if archon_cmd.status.did_fail:
         return "Failed getting status from the controller"
     else:
@@ -425,23 +426,34 @@ async def check_archon(command, spectro: str):
 async def check_flat_lamp(command):
     """Check the flat lamp status"""
 
-    check_lamp = []
-
     flat_lamp_cmd = await (await command.actor.send_command("lvmnps", "status all"))
     if flat_lamp_cmd.status.did_fail:
         return "Failed getting status from the network power switch"
     else:
         replies = flat_lamp_cmd.replies
-        check_lamp.append(replies[-2].body["STATUS"]["DLI-NPS-03"]["Argon"]["STATE"])
-        check_lamp.append(replies[-2].body["STATUS"]["DLI-NPS-03"]["Krypton"]["STATE"])
-        check_lamp.append(replies[-2].body["STATUS"]["DLI-NPS-03"]["Neon"]["STATE"])
-        check_lamp.append(replies[-2].body["STATUS"]["DLI-NPS-03"]["LDLS"]["STATE"])
-        for n in check_lamp:
-            if n:
-                command.info(text="flat lamp is on!")
-                return True
-            else:
-                return "flat lamp is off..."
+
+        check_lamp = {
+            "Argon": replies[-2].body["STATUS"]["DLI-NPS-03"]["Argon"]["STATE"],
+            "Xenon": replies[-2].body["STATUS"]["DLI-NPS-03"]["Xenon"]["STATE"],
+            "HgAr": replies[-2].body["STATUS"]["DLI-NPS-03"]["Hg (Ar)"]["STATE"],
+            "LDLS": replies[-2].body["STATUS"]["DLI-NPS-03"]["LDLS"]["STATE"],
+            "Krypton": replies[-2].body["STATUS"]["DLI-NPS-03"]["Krypton"]["STATE"],
+            "Neon": replies[-2].body["STATUS"]["DLI-NPS-03"]["Neon"]["STATE"],
+            "HgNe": replies[-2].body["STATUS"]["DLI-NPS-03"]["Hg (Ne)"]["STATE"],
+        }
+
+        sum = 0
+        lamp_on = {}
+
+        for key, value in check_lamp.items():
+            sum = sum + value
+            if value == 1:
+                command.info(text=f"{key} flat lamp is on!")
+                lamp_on.update(key=value)
+            elif sum == 0:
+                raise "flat lamp is off..."
+
+        return lamp_on
 
 
 async def extra_header_telemetry(command, spectro: str):
@@ -506,3 +518,23 @@ async def extra_header_telemetry(command, spectro: str):
 
         header_json = json.dumps(header_dict, indent=None)
         return header_json
+
+
+def pretty(time):
+    return f"{bcolors.OKCYAN}{bcolors.BOLD}{time}{bcolors.ENDC}"
+
+
+def pretty2(time):
+    return f"{bcolors.WARNING}{bcolors.BOLD}{time}{bcolors.ENDC}"
+
+
+class bcolors:
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"

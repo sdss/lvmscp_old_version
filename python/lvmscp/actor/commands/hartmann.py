@@ -116,3 +116,5 @@ async def set(command, request: str, spectro: str):
             "hartmann_right": hartmann_right_status,
         }
     )
+
+    command.finish()
