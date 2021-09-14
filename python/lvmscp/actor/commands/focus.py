@@ -85,50 +85,7 @@ async def focus(command, exptime: float, count: int, spectro: str):
                 }
             )
 
-        #   take the dark image
-        command.info("dark image taking . . .")
-        scp_status_cmd = await command.actor.send_command(
-            "lvmscp", f"exposure 1 dark {exptime} {spectro}"
-        )
-        await scp_status_cmd
-
-        if scp_status_cmd.status.did_fail:
-            return "Failed to receive the status of the lvmscp"
-        else:
-            replies = scp_status_cmd.replies
-            command.info(
-                {
-                    "z1_dark": replies.body[-2].body["filename"],
-                    "b1_dark": replies.body[-4].body["filename"],
-                    "r1_dark": replies.body[-6].body["filename"],
-                }
-            )
-
-        #   set the hartmann door - right
-        command.info("hartmann right setting . . .")
-        scp_status_cmd = await command.actor.send_command(
-            "lvmscp", f"hartmann set right {spectro}"
-        )
-        await scp_status_cmd
-
-        if scp_status_cmd.status.did_fail:
-            return "Failed to receive the status of the lvmscp"
-        else:
-            replies = scp_status_cmd.replies
-            command.info(replies.body[-1])
-
-        #   Take the flat image
-        command.info("arc image taking . . .")
-        scp_status_cmd = await command.actor.send_command(
-            "lvmscp", f"exposure 1 flat {exptime} {spectro}"
-        )
-        await scp_status_cmd
-
-        if scp_status_cmd.status.did_fail:
-            return "Failed to receive the status of the lvmscp"
-        else:
-            replies = scp_status_cmd.replies
-            command.info(
+            final_data.update(
                 {
                     "z1_arc": replies.body[-2].body["filename"],
                     "b1_arc": replies.body[-4].body["filename"],
@@ -155,8 +112,83 @@ async def focus(command, exptime: float, count: int, spectro: str):
                 }
             )
 
-        # information of the saved files
-    command.info()
+            final_data.update(
+                {
+                    "z1_dark": replies.body[-2].body["filename"],
+                    "b1_dark": replies.body[-4].body["filename"],
+                    "r1_dark": replies.body[-6].body["filename"],
+                }
+            )
+
+        #   set the hartmann door - right
+        command.info("hartmann right setting . . .")
+        scp_status_cmd = await command.actor.send_command(
+            "lvmscp", f"hartmann set right {spectro}"
+        )
+        await scp_status_cmd
+
+        if scp_status_cmd.status.did_fail:
+            return "Failed to receive the status of the lvmscp"
+        else:
+            replies = scp_status_cmd.replies
+            command.info(replies.body[-1])
+            final_data.update(replies.body[-1])
+
+        #   Take the flat image
+        command.info("arc image taking . . .")
+        scp_status_cmd = await command.actor.send_command(
+            "lvmscp", f"exposure 1 flat {exptime} {spectro}"
+        )
+        await scp_status_cmd
+
+        if scp_status_cmd.status.did_fail:
+            return "Failed to receive the status of the lvmscp"
+        else:
+            replies = scp_status_cmd.replies
+            command.info(
+                {
+                    "z1_arc": replies.body[-2].body["filename"],
+                    "b1_arc": replies.body[-4].body["filename"],
+                    "r1_arc": replies.body[-6].body["filename"],
+                }
+            )
+            final_data.update(
+                {
+                    "z1_arc": replies.body[-2].body["filename"],
+                    "b1_arc": replies.body[-4].body["filename"],
+                    "r1_arc": replies.body[-6].body["filename"],
+                }
+            )
+
+        #   take the dark image
+        command.info("dark image taking . . .")
+        scp_status_cmd = await command.actor.send_command(
+            "lvmscp", f"exposure 1 dark {exptime} {spectro}"
+        )
+        await scp_status_cmd
+
+        if scp_status_cmd.status.did_fail:
+            return "Failed to receive the status of the lvmscp"
+        else:
+            replies = scp_status_cmd.replies
+            command.info(
+                {
+                    "z1_dark": replies.body[-2].body["filename"],
+                    "b1_dark": replies.body[-4].body["filename"],
+                    "r1_dark": replies.body[-6].body["filename"],
+                }
+            )
+
+            final_data.update(
+                {
+                    "z1_dark": replies.body[-2].body["filename"],
+                    "b1_dark": replies.body[-4].body["filename"],
+                    "r1_dark": replies.body[-6].body["filename"],
+                }
+            )
+
+    # information of the saved files
+    command.info(final_data)
 
     command.finish()
 

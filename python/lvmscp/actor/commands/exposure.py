@@ -193,7 +193,7 @@ async def exposure(
             if archon_cmd.status.did_fail:
                 await command.actor.send_command("archon", "expose abort --flush")
                 log.error(
-                    f"{pretty2(datetime.datetime.now())} | Failed starting exposure. Trying to abort and exiting." # noqa E501
+                    f"{pretty2(datetime.datetime.now())} | Failed starting exposure. Trying to abort and exiting."  # noqa E501
                 )
                 return command.fail(
                     text="Failed starting exposure. Trying to abort and exiting."
