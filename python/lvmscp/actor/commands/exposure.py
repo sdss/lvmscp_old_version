@@ -193,7 +193,7 @@ async def exposure(
             if archon_cmd.status.did_fail:
                 await command.actor.send_command("archon", "expose abort --flush")
                 log.error(
-                    f"{pretty2(datetime.datetime.now())} | Failed starting exposure. Trying to abort and exiting."
+                    f"{pretty2(datetime.datetime.now())} | Failed starting exposure. Trying to abort and exiting." # noqa E501
                 )
                 return command.fail(
                     text="Failed starting exposure. Trying to abort and exiting."
@@ -267,7 +267,7 @@ async def exposure(
             else:
                 # For monitering the status
                 while True:
-                    readout_cmd = await command.actor.send_command("archon", f"status")
+                    readout_cmd = await command.actor.send_command("archon", "status")
                     await readout_cmd
                     readout_replies = readout_cmd.replies
                     archon_readout = readout_replies[-2].body["status"]["status_names"][
@@ -411,7 +411,7 @@ async def check_hartmann_opened(command, spectro: str):
 async def check_archon(command, spectro: str):
     """Check the archon CCD status"""
     # Check that the configuration of archon controller has been loaded.
-    archon_cmd = await (await command.actor.send_command("archon", f"status"))
+    archon_cmd = await (await command.actor.send_command("archon", "status"))
     if archon_cmd.status.did_fail:
         return "Failed getting status from the controller"
     else:

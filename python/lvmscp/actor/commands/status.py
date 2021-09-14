@@ -1,7 +1,6 @@
 import asyncio
 import logging
 
-import click
 from clu.command import Command
 
 from sdsstools import get_logger
@@ -155,12 +154,6 @@ async def status(command: Command):
                 spec_dict[spectro].rtd4 = replies[-2].body[spectro]["rtd4"]
 
             # Check the status of the transducer
-            r1_pressure = "ERROR"
-            b1_pressure = "ERROR"
-            z1_pressure = "ERROR"
-            r1_temperature = "ERROR"
-            b1_temperature = "ERROR"
-            z1_temperature = "ERROR"
 
             transducer_status_cmd = await asyncio.wait_for(
                 command.actor.send_command("lvmieb", f"transducer status {spectro}"), 1
@@ -202,9 +195,9 @@ async def status(command: Command):
                 "R1_CCD_TEMP": r1ccd_temp,
                 "Mod 2 Heater A(r1)": r1heater,
                 "B1_CCD_TEMP": b1ccd_temp,
-                "Mod 12 Heater A(b1)": r1heater,
+                "Mod 12 Heater A(b1)": b1heater,
                 "Z1_CCD_TEMP": z1ccd_temp,
-                "Mod 12 Heater B(z1)": r1heater,
+                "Mod 12 Heater B(z1)": z1heater,
             },
             "SHUTTER": {
                 "sp1": {
