@@ -166,6 +166,7 @@ async def exposure(
             command.info(f"Taking exposure {nn + 1} of {count}.")
 
             header_json = await extra_header_telemetry(command, spectro)
+            print(type(header_json))
 
             # Flushing before CCD exposure
             if flush == "yes":
@@ -187,7 +188,7 @@ async def exposure(
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
-                    f"expose start {spectro} --{flavour} {exptime}",
+                    f"expose start --controller {spectro} --{flavour} {exptime}",
                 )
             )
             if archon_cmd.status.did_fail:
@@ -246,22 +247,22 @@ async def exposure(
             # Readout pending information
             log.debug("readout . . .")
             command.info(text="readout . . .")
-
+            print(header_json)
             # Finish exposure
             log.debug("archon expose finish --header")
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
-                    "expose finish",
-                    f"--header '{header_json}'",
+                    "expose finish --header",
+                    f"'{header_json}'",
                 )
             )
 
             replies = archon_cmd.replies
 
             if archon_cmd.status.did_fail:
-                command.info(replies[-1].body)
-                log.info(replies[-1].body)
+                command.info(replies[-2].body)
+                log.info(replies[-2].body)
                 log.error("Failed reading out exposure")
                 command.fail(text="Failed reading out exposure")
             else:
@@ -426,20 +427,23 @@ async def check_archon(command, spectro: str):
 async def check_flat_lamp(command):
     """Check the flat lamp status"""
 
-    flat_lamp_cmd = await (await command.actor.send_command("lvmnps", "status all"))
+    flat_lamp_cmd = await (await command.actor.send_command("lvmnps", "status"))
     if flat_lamp_cmd.status.did_fail:
         return "Failed getting status from the network power switch"
     else:
         replies = flat_lamp_cmd.replies
 
         check_lamp = {
-            "Argon": replies[-2].body["STATUS"]["DLI-NPS-03"]["Argon"]["STATE"],
-            "Xenon": replies[-2].body["STATUS"]["DLI-NPS-03"]["Xenon"]["STATE"],
-            "HgAr": replies[-2].body["STATUS"]["DLI-NPS-03"]["Hg (Ar)"]["STATE"],
-            "LDLS": replies[-2].body["STATUS"]["DLI-NPS-03"]["LDLS"]["STATE"],
-            "Krypton": replies[-2].body["STATUS"]["DLI-NPS-03"]["Krypton"]["STATE"],
-            "Neon": replies[-2].body["STATUS"]["DLI-NPS-03"]["Neon"]["STATE"],
-            "HgNe": replies[-2].body["STATUS"]["DLI-NPS-03"]["Hg (Ne)"]["STATE"],
+            "625nm LED": replies[-2].body["status"]["DLI-01"]["625 nm LED (M625L4)"][
+                "state"
+            ],
+            "Argon": replies[-2].body["status"]["DLI-03"]["Argon"]["state"],
+            "Xenon": replies[-2].body["status"]["DLI-03"]["Xenon"]["state"],
+            "HgAr": replies[-2].body["status"]["DLI-03"]["Hg (Ar)"]["state"],
+            "LDLS": replies[-2].body["status"]["DLI-03"]["LDLS"]["state"],
+            "Krypton": replies[-2].body["status"]["DLI-03"]["Krypton"]["state"],
+            "Neon": replies[-2].body["status"]["DLI-03"]["Neon"]["state"],
+            "HgNe": replies[-2].body["status"]["DLI-03"]["Hg (Ne)"]["state"],
         }
 
         sum = 0
@@ -459,34 +463,30 @@ async def check_flat_lamp(command):
 async def extra_header_telemetry(command, spectro: str):
     """telemetry from the devices and add it on the header"""
     # Build extra header.
-    scp_status_cmd = await command.actor.send_command("lvmscp", f"status {spectro}")
+    scp_status_cmd = await command.actor.send_command("lvmscp", "status")
     await scp_status_cmd
 
     if scp_status_cmd.status.did_fail:
         return "Failed to receive the status of the lvmscp"
     else:
         replies = scp_status_cmd.replies
-        rhtRH1 = replies[-2].body[spectro]["IEB_HUMIDITY"]["rhtRH1"]
-        rhtRH2 = replies[-2].body[spectro]["IEB_HUMIDITY"]["rhtRH2"]
-        rhtRH3 = replies[-2].body[spectro]["IEB_HUMIDITY"]["rhtRH3"]
-        rhtT1 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rhtT1"]
-        rhtT2 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rhtT2"]
-        rhtT3 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rhtT3"]
-        rtd1 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rtd1"]
-        rtd2 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rtd2"]
-        rtd3 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rtd3"]
-        rtd4 = replies[-2].body[spectro]["IEB_TEMPERATURE"]["rtd4"]
+        rhtRH1 = replies[-2].body["IEB"]["HUMIDITY"][spectro]["rhtRH1"]
+        rhtRH2 = replies[-2].body["IEB"]["HUMIDITY"][spectro]["rhtRH2"]
+        rhtRH3 = replies[-2].body["IEB"]["HUMIDITY"][spectro]["rhtRH3"]
+        rhtT1 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rhtT1"]
+        rhtT2 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rhtT2"]
+        rhtT3 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rhtT3"]
+        rtd1 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd1"]
+        rtd2 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd2"]
+        rtd3 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd3"]
+        rtd4 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd4"]
 
-        if replies[-2].body["NETWORK_POWER_SWITCHES"]["STATUS"]["DLI-NPS-02"][
-            "LN2 NIR valve"
-        ]["STATE"]:
+        if replies[-2].body["LN2VALVE"]["LN2NIR"]:
             ln2_nir = "ON"
         else:
             ln2_nir = "OFF"
 
-        if replies[-2].body["NETWORK_POWER_SWITCHES"]["STATUS"]["DLI-NPS-02"][
-            "LN2 Red Valve"
-        ]["STATE"]:
+        if replies[-2].body["LN2VALVE"]["LN2RED"]:
             ln2_red = "ON"
         else:
             ln2_red = "OFF"
@@ -504,19 +504,17 @@ async def extra_header_telemetry(command, spectro: str):
             "rtd4": (rtd4, "IEB rtd sensor Temperature [C]"),
             "LN2NIR": (
                 ln2_nir,
-                replies[-2].body["NETWORK_POWER_SWITCHES"]["STATUS"]["DLI-NPS-02"][
-                    "LN2 NIR valve"
-                ]["DESCR"],
+                "Cryogenic solenoid valve power of NIR camera for LN2",
             ),
             "LN2RED": (
                 ln2_red,
-                replies[-2].body["NETWORK_POWER_SWITCHES"]["STATUS"]["DLI-NPS-02"][
-                    "LN2 Red Valve"
-                ]["DESCR"],
+                "Cryogenic solenoid valve power of RED camera for LN2",
             ),
         }
 
         header_json = json.dumps(header_dict, indent=None)
+        print(type(header_json))
+
         return header_json
 
 

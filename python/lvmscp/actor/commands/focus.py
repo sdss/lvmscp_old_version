@@ -60,8 +60,8 @@ async def focus(command, exptime: float, count: int, spectro: str):
             return "Failed to receive the status of the lvmscp"
         else:
             replies = scp_status_cmd.replies
-            command.info(replies.body[-1])
-            final_data.update(replies.body[-1])
+            command.info(replies[-2].body)
+            final_data.update(replies[-2].body)
 
         # developing the focus command fluid code 2021/09/11 Changgon Kim
         # have to output the data file saved for each lamps, adding the hartmann information
@@ -79,17 +79,19 @@ async def focus(command, exptime: float, count: int, spectro: str):
             replies = scp_status_cmd.replies
             command.info(
                 {
-                    "z1_arc": replies.body[-2].body["filename"],
-                    "b1_arc": replies.body[-4].body["filename"],
-                    "r1_arc": replies.body[-6].body["filename"],
+                    "z1_arc": replies[-2].body["filename"],
+                    "b1_arc": replies[-4].body["filename"],
+                    "r1_arc": replies[-6].body["filename"],
                 }
             )
 
             final_data.update(
                 {
-                    "z1_arc": replies.body[-2].body["filename"],
-                    "b1_arc": replies.body[-4].body["filename"],
-                    "r1_arc": replies.body[-6].body["filename"],
+                    "LEFT": {
+                        "z1_arc": replies[-2].body["filename"],
+                        "b1_arc": replies[-4].body["filename"],
+                        "r1_arc": replies[-6].body["filename"],
+                    }
                 }
             )
 
@@ -106,17 +108,19 @@ async def focus(command, exptime: float, count: int, spectro: str):
             replies = scp_status_cmd.replies
             command.info(
                 {
-                    "z1_dark": replies.body[-2].body["filename"],
-                    "b1_dark": replies.body[-4].body["filename"],
-                    "r1_dark": replies.body[-6].body["filename"],
+                    "z1_dark": replies[-2].body["filename"],
+                    "b1_dark": replies[-4].body["filename"],
+                    "r1_dark": replies[-6].body["filename"],
                 }
             )
 
             final_data.update(
                 {
-                    "z1_dark": replies.body[-2].body["filename"],
-                    "b1_dark": replies.body[-4].body["filename"],
-                    "r1_dark": replies.body[-6].body["filename"],
+                    "LEFT": {
+                        "z1_dark": replies[-2].body["filename"],
+                        "b1_dark": replies[-4].body["filename"],
+                        "r1_dark": replies[-6].body["filename"],
+                    }
                 }
             )
 
@@ -131,8 +135,8 @@ async def focus(command, exptime: float, count: int, spectro: str):
             return "Failed to receive the status of the lvmscp"
         else:
             replies = scp_status_cmd.replies
-            command.info(replies.body[-1])
-            final_data.update(replies.body[-1])
+            command.info(replies[-2].body)
+            final_data.update(replies[-2].body)
 
         #   Take the flat image
         command.info("arc image taking . . .")
@@ -147,16 +151,18 @@ async def focus(command, exptime: float, count: int, spectro: str):
             replies = scp_status_cmd.replies
             command.info(
                 {
-                    "z1_arc": replies.body[-2].body["filename"],
-                    "b1_arc": replies.body[-4].body["filename"],
-                    "r1_arc": replies.body[-6].body["filename"],
+                    "z1_arc": replies[-2].body["filename"],
+                    "b1_arc": replies[-4].body["filename"],
+                    "r1_arc": replies[-6].body["filename"],
                 }
             )
             final_data.update(
                 {
-                    "z1_arc": replies.body[-2].body["filename"],
-                    "b1_arc": replies.body[-4].body["filename"],
-                    "r1_arc": replies.body[-6].body["filename"],
+                    "RIGHT": {
+                        "z1_arc": replies[-2].body["filename"],
+                        "b1_arc": replies[-4].body["filename"],
+                        "r1_arc": replies[-6].body["filename"],
+                    }
                 }
             )
 
@@ -173,17 +179,19 @@ async def focus(command, exptime: float, count: int, spectro: str):
             replies = scp_status_cmd.replies
             command.info(
                 {
-                    "z1_dark": replies.body[-2].body["filename"],
-                    "b1_dark": replies.body[-4].body["filename"],
-                    "r1_dark": replies.body[-6].body["filename"],
+                    "z1_dark": replies[-2].body["filename"],
+                    "b1_dark": replies[-4].body["filename"],
+                    "r1_dark": replies[-6].body["filename"],
                 }
             )
 
             final_data.update(
                 {
-                    "z1_dark": replies.body[-2].body["filename"],
-                    "b1_dark": replies.body[-4].body["filename"],
-                    "r1_dark": replies.body[-6].body["filename"],
+                    "RIGHT": {
+                        "z1_dark": replies[-2].body["filename"],
+                        "b1_dark": replies[-4].body["filename"],
+                        "r1_dark": replies[-6].body["filename"],
+                    }
                 }
             )
 
@@ -196,20 +204,20 @@ async def focus(command, exptime: float, count: int, spectro: str):
 async def check_flat_lamp(command):
     """Check the flat lamp status"""
 
-    flat_lamp_cmd = await (await command.actor.send_command("lvmnps", "status all"))
+    flat_lamp_cmd = await (await command.actor.send_command("lvmnps", "status"))
     if flat_lamp_cmd.status.did_fail:
         return "Failed getting status from the network power switch"
     else:
         replies = flat_lamp_cmd.replies
 
         check_lamp = {
-            "Argon": replies[-2].body["STATUS"]["DLI-NPS-03"]["Argon"]["STATE"],
-            "Xenon": replies[-2].body["STATUS"]["DLI-NPS-03"]["Xenon"]["STATE"],
-            "HgAr": replies[-2].body["STATUS"]["DLI-NPS-03"]["Hg (Ar)"]["STATE"],
-            "LDLS": replies[-2].body["STATUS"]["DLI-NPS-03"]["LDLS"]["STATE"],
-            "Krypton": replies[-2].body["STATUS"]["DLI-NPS-03"]["Krypton"]["STATE"],
-            "Neon": replies[-2].body["STATUS"]["DLI-NPS-03"]["Neon"]["STATE"],
-            "HgNe": replies[-2].body["STATUS"]["DLI-NPS-03"]["Hg (Ne)"]["STATE"],
+            "Argon": replies[-2].body["status"]["DLI-03"]["Argon"]["state"],
+            "Xenon": replies[-2].body["status"]["DLI-03"]["Xenon"]["state"],
+            "HgAr": replies[-2].body["status"]["DLI-03"]["Hg (Ar)"]["state"],
+            "LDLS": replies[-2].body["status"]["DLI-03"]["LDLS"]["state"],
+            "Krypton": replies[-2].body["status"]["DLI-03"]["Krypton"]["state"],
+            "Neon": replies[-2].body["status"]["DLI-03"]["Neon"]["state"],
+            "HgNe": replies[-2].body["status"]["DLI-03"]["Hg (Ne)"]["state"],
         }
 
         sum = 0

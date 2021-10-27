@@ -21,7 +21,7 @@ async def status(command: Command):
     """Receive all of the telemetry related to the spectrograph"""
     # check the power of the network power switch
 
-    nps_status_cmd = await command.actor.send_command("lvmnps", "status all")
+    nps_status_cmd = await command.actor.send_command("lvmnps", "status")
     await nps_status_cmd
 
     if nps_status_cmd.status.did_fail:
@@ -29,26 +29,26 @@ async def status(command: Command):
     else:
         replies = nps_status_cmd.replies
 
-    ln2nir = convert(replies[-2].body["STATUS"]["DLI-NPS-02"]["LN2 NIR valve"]["STATE"])
-    ln2red = convert(replies[-2].body["STATUS"]["DLI-NPS-02"]["LN2 Red Valve"]["STATE"])
+    ln2nir = convert(replies[-2].body["status"]["DLI-02"]["LN2 NIR Valve"]["state"])
+    ln2red = convert(replies[-2].body["status"]["DLI-02"]["LN2 Red Valve"]["state"])
 
     archon_power_nps = convert(
-        replies[-2].body["STATUS"]["DLI-NPS-02"]["LVM-Archon-02"]["STATE"]
+        replies[-2].body["status"]["DLI-02"]["LVM-Archon-02"]["state"]
     )
 
-    argon = convert(replies[-2].body["STATUS"]["DLI-NPS-03"]["Argon"]["STATE"])
-    xenon = convert(replies[-2].body["STATUS"]["DLI-NPS-03"]["Xenon"]["STATE"])
-    hgar = convert(replies[-2].body["STATUS"]["DLI-NPS-03"]["Hg (Ar)"]["STATE"])
-    ldls = convert(replies[-2].body["STATUS"]["DLI-NPS-03"]["LDLS"]["STATE"])
-    krypton = convert(replies[-2].body["STATUS"]["DLI-NPS-03"]["Krypton"]["STATE"])
-    neon = convert(replies[-2].body["STATUS"]["DLI-NPS-03"]["Neon"]["STATE"])
-    hgne = convert(replies[-2].body["STATUS"]["DLI-NPS-03"]["Hg (Ne)"]["STATE"])
+    argon = convert(replies[-2].body["status"]["DLI-03"]["Argon"]["state"])
+    xenon = convert(replies[-2].body["status"]["DLI-03"]["Xenon"]["state"])
+    hgar = convert(replies[-2].body["status"]["DLI-03"]["Hg (Ar)"]["state"])
+    ldls = convert(replies[-2].body["status"]["DLI-03"]["LDLS"]["state"])
+    krypton = convert(replies[-2].body["status"]["DLI-03"]["Krypton"]["state"])
+    neon = convert(replies[-2].body["status"]["DLI-03"]["Neon"]["state"])
+    hgne = convert(replies[-2].body["status"]["DLI-03"]["Hg (Ne)"]["state"])
 
-    ieb06 = convert(replies[-2].body["STATUS"]["DLI-NPS-02"]["IEB06"]["STATE"])
+    ieb06 = convert(replies[-2].body["status"]["DLI-02"]["IEB06"]["state"])
 
-    rpi = convert(replies[-2].body["STATUS"]["DLI-NPS-02"]["RPi"]["STATE"])
+    rpi = convert(replies[-2].body["status"]["DLI-02"]["RPi"]["state"])
     pres_transducer = convert(
-        replies[-2].body["STATUS"]["DLI-NPS-02"]["Pressure transducers"]["STATE"]
+        replies[-2].body["status"]["DLI-02"]["Pressure transducers"]["state"]
     )
 
     # check the status of archon controller
