@@ -4,6 +4,7 @@ import click
 
 from sdsstools import get_logger
 
+from lvmscp.actor.supervisor import Supervisor
 from lvmscp.exceptions import lvmscpError
 
 #  import asyncio
@@ -26,19 +27,24 @@ log.sh.setLevel(logging.DEBUG)
     default="sp1",
     required=False,
 )
-async def focus(command, exptime: float, count: int, spectro: str):
+async def focus(
+    command,
+    supervisors: dict[str, Supervisor],
+    exptime: float,
+    count: int,
+    spectro: str,
+):
     """command for focusing sequence"""
 
     final_data = {}
-
+    # 47 is readout seconds
+    integ_time = (exptime + 47) * 3
+    command.info(f"Total exposure time will be = {integ_time}")
     # Check if lamp is on
     log.debug("Checking flat lamps . . .")
     command.info(text="Checking flat lamps . . .")
     try:
         lamps_on = await check_flat_lamp(command)
-        for key, value in lamps_on.items():
-            log.info("{key} arc lamps on!")
-            command.info(text=f"{key} arc lamps on!")
     except lvmscpError as err:
         log.error(err)
         return command.fail(text=err)
@@ -87,39 +93,10 @@ async def focus(command, exptime: float, count: int, spectro: str):
 
             final_data.update(
                 {
-                    "LEFT": {
+                    "LEFT_ARC": {
                         "z1_arc": replies[-2].body["filename"],
                         "b1_arc": replies[-4].body["filename"],
                         "r1_arc": replies[-6].body["filename"],
-                    }
-                }
-            )
-
-        #   take the dark image
-        command.info("dark image taking . . .")
-        scp_status_cmd = await command.actor.send_command(
-            "lvmscp", f"exposure 1 dark {exptime} {spectro}"
-        )
-        await scp_status_cmd
-
-        if scp_status_cmd.status.did_fail:
-            return "Failed to receive the status of the lvmscp"
-        else:
-            replies = scp_status_cmd.replies
-            command.info(
-                {
-                    "z1_dark": replies[-2].body["filename"],
-                    "b1_dark": replies[-4].body["filename"],
-                    "r1_dark": replies[-6].body["filename"],
-                }
-            )
-
-            final_data.update(
-                {
-                    "LEFT": {
-                        "z1_dark": replies[-2].body["filename"],
-                        "b1_dark": replies[-4].body["filename"],
-                        "r1_dark": replies[-6].body["filename"],
                     }
                 }
             )
@@ -158,13 +135,28 @@ async def focus(command, exptime: float, count: int, spectro: str):
             )
             final_data.update(
                 {
-                    "RIGHT": {
+                    "RIGHT_ARC": {
                         "z1_arc": replies[-2].body["filename"],
                         "b1_arc": replies[-4].body["filename"],
                         "r1_arc": replies[-6].body["filename"],
                     }
                 }
             )
+        """
+        #   set the hartmann door - close
+        command.info("hartmann close setting . . .")
+        scp_status_cmd = await command.actor.send_command(
+            "lvmscp", f"hartmann set close {spectro}"
+        )
+        await scp_status_cmd
+
+        if scp_status_cmd.status.did_fail:
+            return "Failed to receive the status of the lvmscp"
+        else:
+            replies = scp_status_cmd.replies
+            command.info(replies[-2].body)
+            final_data.update(replies[-2].body)
+            """
 
         #   take the dark image
         command.info("dark image taking . . .")
@@ -174,7 +166,7 @@ async def focus(command, exptime: float, count: int, spectro: str):
         await scp_status_cmd
 
         if scp_status_cmd.status.did_fail:
-            return "Failed to receive the status of the lvmscp"
+            return command.fail(text="Failed to receive the status of the lvmscp")
         else:
             replies = scp_status_cmd.replies
             command.info(
@@ -187,7 +179,7 @@ async def focus(command, exptime: float, count: int, spectro: str):
 
             final_data.update(
                 {
-                    "RIGHT": {
+                    "DARK": {
                         "z1_dark": replies[-2].body["filename"],
                         "b1_dark": replies[-4].body["filename"],
                         "r1_dark": replies[-6].body["filename"],
@@ -197,7 +189,6 @@ async def focus(command, exptime: float, count: int, spectro: str):
 
     # information of the saved files
     command.info(final_data)
-
     command.finish()
 
 
@@ -211,13 +202,16 @@ async def check_flat_lamp(command):
         replies = flat_lamp_cmd.replies
 
         check_lamp = {
-            "Argon": replies[-2].body["status"]["DLI-03"]["Argon"]["state"],
-            "Xenon": replies[-2].body["status"]["DLI-03"]["Xenon"]["state"],
-            "HgAr": replies[-2].body["status"]["DLI-03"]["Hg (Ar)"]["state"],
+            "625NM": replies[-2].body["status"]["DLI-01"]["625 nm LED (M625L4)"][
+                "state"
+            ],
+            "ARGON": replies[-2].body["status"]["DLI-03"]["Argon"]["state"],
+            "XENON": replies[-2].body["status"]["DLI-03"]["Xenon"]["state"],
+            "HGAR": replies[-2].body["status"]["DLI-03"]["Hg (Ar)"]["state"],
             "LDLS": replies[-2].body["status"]["DLI-03"]["LDLS"]["state"],
-            "Krypton": replies[-2].body["status"]["DLI-03"]["Krypton"]["state"],
-            "Neon": replies[-2].body["status"]["DLI-03"]["Neon"]["state"],
-            "HgNe": replies[-2].body["status"]["DLI-03"]["Hg (Ne)"]["state"],
+            "KRYPTON": replies[-2].body["status"]["DLI-03"]["Krypton"]["state"],
+            "NEON": replies[-2].body["status"]["DLI-03"]["Neon"]["state"],
+            "HGNE": replies[-2].body["status"]["DLI-03"]["Hg (Ne)"]["state"],
         }
 
         sum = 0
@@ -227,6 +221,6 @@ async def check_flat_lamp(command):
             sum = sum + value
             if value == 1:
                 command.info(text=f"{key} flat lamp is on!")
-                lamp_on.update(key="ON")
 
+        lamp_on.update(check_lamp)
         return lamp_on

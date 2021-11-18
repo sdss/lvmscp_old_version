@@ -1,0 +1,63 @@
+class Supervisor:
+    def __init__(self, spectro: str):
+
+        self.test = 1
+        # check the availabilty of the spectrograph
+        if spectro == "sp1":
+            self.ready = True
+            self.name = spectro
+            self.shutter_status = "ERROR"
+            self.shutter_power_status = "ERROR"
+            self.hartmann_left_status = "ERROR"
+            self.hartmann_right_status = "ERROR"
+            self.hartmann_left_power_status = "ERROR"
+            self.hartmann_right_power_status = "ERROR"
+            self.rhtRH1 = "ERROR"
+            self.rhtT1 = "ERROR"
+            self.rhtRH2 = "ERROR"
+            self.rhtT2 = "ERROR"
+            self.rhtRH3 = "ERROR"
+            self.rhtT3 = "ERROR"
+            self.rtd1 = "ERROR"
+            self.rtd2 = "ERROR"
+            self.rtd3 = "ERROR"
+            self.rtd4 = "ERROR"
+            self.r1_pressure = "ERROR"
+            self.b1_pressure = "ERROR"
+            self.z1_pressure = "ERROR"
+            self.r1_temperature = "ERROR"
+            self.b1_temperature = "ERROR"
+            self.z1_temperature = "ERROR"
+            self.gage_A = "ERROR"
+            self.gage_B = "ERROR"
+            self.gage_C = "ERROR"
+            self.testccd = "z1"
+        else:
+            self.ready = False
+            self.name = spectro
+            self.shutter_status = "Not Connected"
+            self.shutter_power_status = "Not Connected"
+            self.hartmann_left_status = "Not Connected"
+            self.hartmann_right_status = "Not Connected"
+            self.hartmann_left_power_status = "Not Connected"
+            self.hartmann_right_power_status = "Not Connected"
+            self.rhtRH1 = "Not Connected"
+            self.rhtT1 = "Not Connected"
+            self.rhtRH2 = "Not Connected"
+            self.rhtT2 = "Not Connected"
+            self.rhtRH3 = "Not Connected"
+            self.rhtT3 = "Not Connected"
+            self.rtd1 = "Not Connected"
+            self.rtd2 = "Not Connected"
+            self.rtd3 = "Not Connected"
+            self.rtd4 = "Not Connected"
+            self.r1_pressure = "Not Connected"
+            self.b1_pressure = "Not Connected"
+            self.z1_pressure = "Not Connected"
+            self.r1_temperature = "Not Connected"
+            self.b1_temperature = "Not Connected"
+            self.z1_temperature = "Not Connected"
+            self.gage_A = "Not Connected"
+            self.gage_B = "Not Connected"
+            self.gage_C = "Not Connected"
+            self.testccd = "Not connected"

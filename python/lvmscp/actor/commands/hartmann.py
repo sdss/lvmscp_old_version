@@ -1,5 +1,7 @@
 import click
 
+from lvmscp.actor.supervisor import Supervisor
+
 from . import parser
 
 
@@ -22,7 +24,7 @@ def hartmann(*args):
     default="sp1",
     required=False,
 )
-async def set(command, request: str, spectro: str):
+async def set(command, supervisors: dict[str, Supervisor], request: str, spectro: str):
 
     hartmann_status_cmd = await command.actor.send_command(
         "lvmieb", f"hartmann status {spectro}"

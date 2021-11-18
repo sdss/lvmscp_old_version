@@ -15,6 +15,7 @@ import click
 
 from sdsstools import get_logger
 
+from lvmscp.actor.supervisor import Supervisor
 from lvmscp.exceptions import lvmscpError
 
 from . import parser
@@ -51,7 +52,13 @@ log.sh.setLevel(logging.DEBUG)
     help="Flush before the exposure",
 )
 async def exposure(
-    command, exptime: float, count: int, flavour: str, spectro: str, flush: str
+    command,
+    supervisors: dict[str, Supervisor],
+    exptime: float,
+    count: int,
+    flavour: str,
+    spectro: str,
+    flush: str,
 ):
     """Exposure command controlling all lower actors"""
 
@@ -144,15 +151,26 @@ async def exposure(
             log.error(err)
             return command.fail(text=err)
 
+        check_lamp = None
         if flavour == "flat":
             log.debug("Checking flat lamps . . .")
             command.info(text="Checking flat lamps . . .")
 
             try:
-                lamps_on = await check_flat_lamp(command)
-                for key, value in lamps_on.items():
-                    log.info("{key} arc lamps on!")
-                    command.info(text=f"{key} arc lamps on!")
+                check_lamp = await check_flat_lamp(command)
+
+                sum = 0
+                lamp_on = {}
+                for key, value in check_lamp.items():
+                    sum = sum + value
+                    if value == 1:
+                        log.info("{key} arc lamps on!")
+                        command.info(text=f"{key} flat lamp is on!")
+                        lamp_on.update(key=value)
+
+                if sum == 0:
+                    command.fail(text="flat lamps are all off . . .")
+
             except Exception as err:
                 log.error(err)
                 return command.fail(text=err)
@@ -165,8 +183,9 @@ async def exposure(
             log.info(f"Taking exposure {nn + 1} of {count}.")
             command.info(f"Taking exposure {nn + 1} of {count}.")
 
-            header_json = await extra_header_telemetry(command, spectro)
-            print(type(header_json))
+            header_json = await extra_header_telemetry(
+                command, spectro, check_lamp, supervisors
+            )
 
             # Flushing before CCD exposure
             if flush == "yes":
@@ -247,9 +266,9 @@ async def exposure(
             # Readout pending information
             log.debug("readout . . .")
             command.info(text="readout . . .")
-            print(header_json)
             # Finish exposure
             log.debug("archon expose finish --header")
+            print(header_json)
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
@@ -261,10 +280,12 @@ async def exposure(
             replies = archon_cmd.replies
 
             if archon_cmd.status.did_fail:
-                command.info(replies[-2].body)
+                # command.info(replies[-2].body)
                 log.info(replies[-2].body)
                 log.error("Failed reading out exposure")
-                command.fail(text="Failed reading out exposure")
+                return command.fail(text="Failed reading out exposure")
+
+                # command.finish()
             else:
                 # For monitering the status
                 while True:
@@ -434,33 +455,22 @@ async def check_flat_lamp(command):
         replies = flat_lamp_cmd.replies
 
         check_lamp = {
-            "625nm LED": replies[-2].body["status"]["DLI-01"]["625 nm LED (M625L4)"][
+            "625NM": replies[-2].body["status"]["DLI-01"]["625 nm LED (M625L4)"][
                 "state"
             ],
-            "Argon": replies[-2].body["status"]["DLI-03"]["Argon"]["state"],
-            "Xenon": replies[-2].body["status"]["DLI-03"]["Xenon"]["state"],
-            "HgAr": replies[-2].body["status"]["DLI-03"]["Hg (Ar)"]["state"],
+            "ARGON": replies[-2].body["status"]["DLI-03"]["Argon"]["state"],
+            "XENON": replies[-2].body["status"]["DLI-03"]["Xenon"]["state"],
+            "HGAR": replies[-2].body["status"]["DLI-03"]["Hg (Ar)"]["state"],
             "LDLS": replies[-2].body["status"]["DLI-03"]["LDLS"]["state"],
-            "Krypton": replies[-2].body["status"]["DLI-03"]["Krypton"]["state"],
-            "Neon": replies[-2].body["status"]["DLI-03"]["Neon"]["state"],
-            "HgNe": replies[-2].body["status"]["DLI-03"]["Hg (Ne)"]["state"],
+            "KRYPTON": replies[-2].body["status"]["DLI-03"]["Krypton"]["state"],
+            "NEON": replies[-2].body["status"]["DLI-03"]["Neon"]["state"],
+            "HGNE": replies[-2].body["status"]["DLI-03"]["Hg (Ne)"]["state"],
         }
 
-        sum = 0
-        lamp_on = {}
-
-        for key, value in check_lamp.items():
-            sum = sum + value
-            if value == 1:
-                command.info(text=f"{key} flat lamp is on!")
-                lamp_on.update(key=value)
-            elif sum == 0:
-                raise "flat lamp is off..."
-
-        return lamp_on
+        return check_lamp
 
 
-async def extra_header_telemetry(command, spectro: str):
+async def extra_header_telemetry(command, spectro: str, check_lamp, supervisors):
     """telemetry from the devices and add it on the header"""
     # Build extra header.
     scp_status_cmd = await command.actor.send_command("lvmscp", "status")
@@ -480,16 +490,35 @@ async def extra_header_telemetry(command, spectro: str):
         rtd2 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd2"]
         rtd3 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd3"]
         rtd4 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd4"]
+        r1pres = replies[-2].body["TRANSDUCER"]["PRESSURE"][spectro]["r1"]
+        b1pres = replies[-2].body["TRANSDUCER"]["PRESSURE"][spectro]["b1"]
+        z1pres = replies[-2].body["TRANSDUCER"]["PRESSURE"][spectro]["z1"]
+        testccd = replies[-2].body["TESTCCD"]
+        gage_A = replies[-2].body["LINEARGAGE"][spectro][testccd]["A"]
+        gage_B = replies[-2].body["LINEARGAGE"][spectro][testccd]["B"]
+        gage_C = replies[-2].body["LINEARGAGE"][spectro][testccd]["C"]
 
-        if replies[-2].body["LN2VALVE"]["LN2NIR"]:
+        if replies[-2].body["LN2VALVE"]["LN2NIR"] == "ON":
             ln2_nir = "ON"
         else:
             ln2_nir = "OFF"
 
-        if replies[-2].body["LN2VALVE"]["LN2RED"]:
+        if replies[-2].body["LN2VALVE"]["LN2RED"] == "ON":
             ln2_red = "ON"
         else:
             ln2_red = "OFF"
+
+        left = -1
+        if replies[-2].body["HARTMANN"][spectro]["hartmann_left_status"] == "opened":
+            left = 0
+        elif replies[-2].body["HARTMANN"][spectro]["hartmann_left_status"] == "closed":
+            left = 1
+
+        right = -1
+        if replies[-2].body["HARTMANN"][spectro]["hartmann_right_status"] == "opened":
+            right = 0
+        elif replies[-2].body["HARTMANN"][spectro]["hartmann_right_status"] == "closed":
+            right = 1
 
         header_dict = {
             "rhtRH1": (rhtRH1, "IEB rht sensor humidity [%]"),
@@ -510,10 +539,27 @@ async def extra_header_telemetry(command, spectro: str):
                 ln2_red,
                 "Cryogenic solenoid valve power of RED camera for LN2",
             ),
+            "HARTMANN": (f"{left} {right}", "Left/right. 0=open 1=closed"),
+            "RPRESS": (r1pres, "Pressure from the transducer of r1 cryostat"),
+            "BPRESS": (b1pres, "Pressure from the transducer of b1 cryostat"),
+            "ZPRESS": (z1pres, "Pressure from the transducer of z1 cryostat"),
+            supervisors[spectro].testccd: {
+                "DEPTHA": gage_A,
+                "DEPTHB": gage_B,
+                "DEPTHC": gage_C,
+            },
         }
+        if check_lamp:
+            for key, value in check_lamp.items():
+                if value:
+                    check_lamp[key] = "ON"
+                else:
+                    check_lamp[key] = "OFF"
 
+            print(check_lamp)
+            header_dict.update(check_lamp)
+        print(header_dict)
         header_json = json.dumps(header_dict, indent=None)
-        print(type(header_json))
 
         return header_json
 

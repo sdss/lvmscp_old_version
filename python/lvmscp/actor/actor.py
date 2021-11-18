@@ -10,12 +10,16 @@ from __future__ import absolute_import, annotations, division, print_function
 
 from clu.actor import AMQPActor
 
+from lvmscp.actor.supervisor import Supervisor
+
 from .commands import parser as SCP_command_parser
 
 
 # from scpactor import __version__
 
 __all__ = ["lvmscp"]
+
+spectro_list = ["sp1", "sp2", "sp3"]
 
 
 class lvmscp(AMQPActor):
@@ -31,6 +35,34 @@ class lvmscp(AMQPActor):
     def __init__(
         self,
         *args,
+        supervisors: tuple[Supervisor, ...] = (),
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
+        self.supervisors = {s.name: s for s in supervisors}
+
+    async def start(self):
+        """Start the actor and connect the controllers."""
+        await super().start()
+
+    async def stop(self):
+        with suppress(asyncio.CancelledError):
+            for task in self._fetch_log_jobs:
+                task.cancel()
+                await task
+        return super().stop()
+
+    @classmethod
+    def from_config(cls, config, *args, **kwargs):
+        instance = super(lvmscp, cls).from_config(config, *args, **kwargs)
+        assert isinstance(instance, lvmscp)
+        assert isinstance(instance.config, dict)
+        instance.parser_args = [instance.supervisors]
+        for (ctrname, ctr) in instance.config.items():
+            if ctrname in spectro_list:
+                print(ctrname, ctr)
+                instance.supervisors.update({ctrname: Supervisor(ctrname)})
+
+        print(instance.supervisors)
+
+        return instance

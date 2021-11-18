@@ -1,6 +1,7 @@
 import click
 from clu.command import Command
 
+from lvmscp.actor.supervisor import Supervisor
 from lvmscp.exceptions import lvmscpError
 
 from . import parser
@@ -14,7 +15,7 @@ def talk(*args):
 
 @talk.command()
 @click.argument("message", type=str)
-async def lvmieb(command: Command, message):
+async def lvmieb(command: Command, supervisors: dict[str, Supervisor], message):
     """Test the lvmieb"""
     # Check the status (opened / closed) of the shutter
     try:
@@ -32,7 +33,7 @@ async def lvmieb(command: Command, message):
 
 @talk.command()
 @click.argument("message", type=str)
-async def lvmnps(command: Command, message):
+async def lvmnps(command: Command, supervisors: dict[str, Supervisor], message):
     """Test the lvmnps"""
     # Check the status (opened / closed) of the shutter
     try:
