@@ -1,10 +1,5 @@
-import asyncio
-import logging
-
 import click
 from clu.command import Command
-
-from sdsstools import get_logger
 
 from lvmscp.actor.supervisor import Supervisor
 

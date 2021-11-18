@@ -8,6 +8,9 @@
 
 from __future__ import absolute_import, annotations, division, print_function
 
+import asyncio
+from contextlib import suppress
+
 from clu.actor import AMQPActor
 
 from lvmscp.actor.supervisor import Supervisor
