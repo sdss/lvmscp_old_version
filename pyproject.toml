@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sdss-lvmscp"
-version = "0.1.1"
+version = "0.1.2"
 description = "Simple Template package for creating SDSS Python projects"
 authors = ["Changgon Kim <changgonkim@khu.ac.kr>"]
 license = "BSD-3-Clause"
