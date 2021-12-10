@@ -27,29 +27,44 @@ log.sh.setLevel(logging.DEBUG)
     default="sp1",
     required=False,
 )
+@click.option(
+    "--dark",
+    flag_value=True,
+    type=bool,
+    required=False,
+    default=False,
+    help="Option for taking dark",
+)
 async def focus(
     command,
     supervisors: dict[str, Supervisor],
     exptime: float,
     count: int,
     spectro: str,
+    dark: bool
 ):
     """command for focusing sequence"""
 
     final_data = {}
     # 47 is readout seconds
-    integ_time = (exptime + 47) * 3
+    if dark:
+        integ_time = (exptime + 47) * 3
+    else:
+        integ_time = (exptime + 47) * 2
+
     command.info(f"Total exposure time will be = {integ_time}")
     # Check if lamp is on
-    log.debug("Checking flat lamps . . .")
-    command.info(text="Checking flat lamps . . .")
+    log.debug("Checking arc lamps . . .")
+    command.info(text="Checking arc lamps . . .")
     try:
         lamps_on = await check_flat_lamp(command)
     except lvmscpError as err:
         log.error(err)
         return command.fail(text=err)
-
-    final_data.update(lamps_on)
+    if lamps_on != False:
+        final_data.update(lamps_on)
+    elif lamps_on == False:
+        return command.fail(text="Flat lamps are not on . . . ")
 
     # Loop for counts
     # start exposure loop
@@ -63,7 +78,7 @@ async def focus(
         await scp_status_cmd
 
         if scp_status_cmd.status.did_fail:
-            return "Failed to receive the status of the lvmscp"
+            return command.error("Failed to receive the status of the lvmscp")
         else:
             replies = scp_status_cmd.replies
             command.info(replies[-2].body)
@@ -72,7 +87,7 @@ async def focus(
         # developing the focus command fluid code 2021/09/11 Changgon Kim
         # have to output the data file saved for each lamps, adding the hartmann information
 
-        #   Take the flat image
+        #   Take the arc image
         command.info("arc image taking . . .")
         scp_status_cmd = await command.actor.send_command(
             "lvmscp", f"exposure 1 flat {exptime} {spectro}"
@@ -80,7 +95,7 @@ async def focus(
         await scp_status_cmd
 
         if scp_status_cmd.status.did_fail:
-            return "Failed to receive the status of the lvmscp"
+            return command.error("Failed to receive the status of the lvmscp")
         else:
             replies = scp_status_cmd.replies
             command.info(
@@ -109,13 +124,13 @@ async def focus(
         await scp_status_cmd
 
         if scp_status_cmd.status.did_fail:
-            return "Failed to receive the status of the lvmscp"
+            return command.error("Failed to receive the status of the lvmscp")
         else:
             replies = scp_status_cmd.replies
             command.info(replies[-2].body)
             final_data.update(replies[-2].body)
 
-        #   Take the flat image
+        #   Take the arc image
         command.info("arc image taking . . .")
         scp_status_cmd = await command.actor.send_command(
             "lvmscp", f"exposure 1 flat {exptime} {spectro}"
@@ -123,7 +138,7 @@ async def focus(
         await scp_status_cmd
 
         if scp_status_cmd.status.did_fail:
-            return "Failed to receive the status of the lvmscp"
+            return comman.error("Failed to receive the status of the lvmscp")
         else:
             replies = scp_status_cmd.replies
             command.info(
@@ -142,50 +157,36 @@ async def focus(
                     }
                 }
             )
-        """
-        #   set the hartmann door - close
-        command.info("hartmann close setting . . .")
-        scp_status_cmd = await command.actor.send_command(
-            "lvmscp", f"hartmann set close {spectro}"
-        )
-        await scp_status_cmd
 
-        if scp_status_cmd.status.did_fail:
-            return "Failed to receive the status of the lvmscp"
-        else:
-            replies = scp_status_cmd.replies
-            command.info(replies[-2].body)
-            final_data.update(replies[-2].body)
-            """
-
-        #   take the dark image
-        command.info("dark image taking . . .")
-        scp_status_cmd = await command.actor.send_command(
-            "lvmscp", f"exposure 1 dark {exptime} {spectro}"
-        )
-        await scp_status_cmd
-
-        if scp_status_cmd.status.did_fail:
-            return command.fail(text="Failed to receive the status of the lvmscp")
-        else:
-            replies = scp_status_cmd.replies
-            command.info(
-                {
-                    "z1_dark": replies[-2].body["filename"],
-                    "b1_dark": replies[-4].body["filename"],
-                    "r1_dark": replies[-6].body["filename"],
-                }
+        if dark:
+            #   take the dark image
+            command.info("dark image taking . . .")
+            scp_status_cmd = await command.actor.send_command(
+                "lvmscp", f"exposure 1 dark {exptime} {spectro}"
             )
+            await scp_status_cmd
 
-            final_data.update(
-                {
-                    "DARK": {
+            if scp_status_cmd.status.did_fail:
+                return command.fail(text="Failed to receive the status of the lvmscp")
+            else:
+                replies = scp_status_cmd.replies
+                command.info(
+                    {
                         "z1_dark": replies[-2].body["filename"],
                         "b1_dark": replies[-4].body["filename"],
                         "r1_dark": replies[-6].body["filename"],
                     }
-                }
-            )
+                )
+
+                final_data.update(
+                    {
+                        "DARK": {
+                            "z1_dark": replies[-2].body["filename"],
+                            "b1_dark": replies[-4].body["filename"],
+                            "r1_dark": replies[-6].body["filename"],
+                        }
+                    }
+                )
 
     # information of the saved files
     command.info(final_data)
@@ -197,7 +198,7 @@ async def check_flat_lamp(command):
 
     flat_lamp_cmd = await (await command.actor.send_command("lvmnps", "status"))
     if flat_lamp_cmd.status.did_fail:
-        return "Failed getting status from the network power switch"
+        return False
     else:
         replies = flat_lamp_cmd.replies
 

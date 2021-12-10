@@ -158,7 +158,11 @@ async def exposure(
 
             try:
                 check_lamp = await check_flat_lamp(command)
-
+            except Exception as err:
+                log.error(err)
+                return command.fail(text=err)
+            
+            if check_lamp != False:
                 sum = 0
                 lamp_on = {}
                 for key, value in check_lamp.items():
@@ -167,13 +171,12 @@ async def exposure(
                         log.info("{key} arc lamps on!")
                         command.info(text=f"{key} flat lamp is on!")
                         lamp_on.update(key=value)
-
+                print(f"sum is {sum}")
                 if sum == 0:
-                    command.fail(text="flat lamps are all off . . .")
+                    return command.fail(text="flat lamps are all off . . .")
+            elif check_lamp == False:
+                return command.fail(text="Power Switch status is not Reading . . .")
 
-            except Exception as err:
-                log.error(err)
-                return command.fail(text=err)
 
         log.info("Starting the exposure.")
         command.info(text="Starting the exposure.")
@@ -336,8 +339,7 @@ async def close_shutter_after(command, delay: float, spectro: str):
 
     if shutter_cmd.status.did_fail:
         log.error("Shutter failed to close.")
-        command.fail(text="Shutter failed to close.")
-        return False
+        return command.fail(text="Shutter failed to close.")
 
     replies = shutter_cmd.replies
     shutter_status = replies[-2].body[spectro]["shutter"]
@@ -450,7 +452,7 @@ async def check_flat_lamp(command):
 
     flat_lamp_cmd = await (await command.actor.send_command("lvmnps", "status"))
     if flat_lamp_cmd.status.did_fail:
-        return "Failed getting status from the network power switch"
+        return False
     else:
         replies = flat_lamp_cmd.replies
 
