@@ -197,11 +197,12 @@ async def status(command: Command, supervisors: dict[str, Supervisor]):
             else:
                 replies = gage_status_cmd.replies
 
-            # repeat the status command if the A value is wrong. (For the hardware problem reported)
-            
+            # repeat the status command if the A value is wrong.
+
             if replies[-2].body[spectro]["z1"]["A"] == -999.0:
                 gage_status_cmd = await asyncio.wait_for(
-                    command.actor.send_command("lvmieb", f"depth status {spectro} z1"), 1
+                    command.actor.send_command("lvmieb", f"depth status {spectro} z1"),
+                    1,
                 )
                 await gage_status_cmd
 
@@ -211,7 +212,7 @@ async def status(command: Command, supervisors: dict[str, Supervisor]):
                     )
                 else:
                     replies = gage_status_cmd.replies
-                
+
             supervisors[spectro].gage_A = replies[-2].body[spectro]["z1"]["A"]
             supervisors[spectro].gage_B = replies[-2].body[spectro]["z1"]["B"]
             supervisors[spectro].gage_C = replies[-2].body[spectro]["z1"]["C"]

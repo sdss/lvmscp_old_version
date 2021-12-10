@@ -161,8 +161,8 @@ async def exposure(
             except Exception as err:
                 log.error(err)
                 return command.fail(text=err)
-            
-            if check_lamp != False:
+
+            if check_lamp:
                 sum = 0
                 lamp_on = {}
                 for key, value in check_lamp.items():
@@ -174,9 +174,8 @@ async def exposure(
                 print(f"sum is {sum}")
                 if sum == 0:
                     return command.fail(text="flat lamps are all off . . .")
-            elif check_lamp == False:
+            elif not check_lamp:
                 return command.fail(text="Power Switch status is not Reading . . .")
-
 
         log.info("Starting the exposure.")
         command.info(text="Starting the exposure.")

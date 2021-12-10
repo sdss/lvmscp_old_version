@@ -41,7 +41,7 @@ async def focus(
     exptime: float,
     count: int,
     spectro: str,
-    dark: bool
+    dark: bool,
 ):
     """command for focusing sequence"""
 
@@ -61,9 +61,9 @@ async def focus(
     except lvmscpError as err:
         log.error(err)
         return command.fail(text=err)
-    if lamps_on != False:
+    if lamps_on:
         final_data.update(lamps_on)
-    elif lamps_on == False:
+    elif not lamps_on:
         return command.fail(text="Flat lamps are not on . . . ")
 
     # Loop for counts
@@ -138,7 +138,7 @@ async def focus(
         await scp_status_cmd
 
         if scp_status_cmd.status.did_fail:
-            return comman.error("Failed to receive the status of the lvmscp")
+            return command.error("Failed to receive the status of the lvmscp")
         else:
             replies = scp_status_cmd.replies
             command.info(
