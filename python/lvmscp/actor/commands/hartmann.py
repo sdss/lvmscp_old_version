@@ -5,6 +5,9 @@ from lvmscp.actor.supervisor import Supervisor
 from . import parser
 
 
+# from clu.parsers.click import command_parser
+
+
 @parser.group()
 def hartmann(*args):
     """control the hartmann door."""
@@ -113,7 +116,7 @@ async def set(command, supervisors: dict[str, Supervisor], request: str, spectro
         hartmann_right_status = replies[-2].body[spectro]["hartmann_right"]
 
     command.info(
-        HARTMANN={
+        hartmann={
             "hartmann_left": hartmann_left_status,
             "hartmann_right": hartmann_right_status,
         }

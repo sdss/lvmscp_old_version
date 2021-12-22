@@ -7,6 +7,9 @@ from lvmscp.exceptions import lvmscpError
 from . import parser
 
 
+# from clu.parsers.click import command_parser
+
+
 @parser.group()
 def talk(*args):
     """talk to lower actors for engineering"""
@@ -28,7 +31,7 @@ async def lvmieb(command: Command, supervisors: dict[str, Supervisor], message):
         return command.fail(text=lvmieb_status_cmd.status)
 
     replies = lvmieb_status_cmd.replies
-    command.finish(replies[-2].body)
+    command.finish(reply=replies[-2].body)
 
 
 @talk.command()
@@ -46,4 +49,4 @@ async def lvmnps(command: Command, supervisors: dict[str, Supervisor], message):
         return command.fail(text=lvmnps_status_cmd.status)
 
     replies = lvmnps_status_cmd.replies
-    command.finish(replies[-2].body)
+    command.finish(reply=replies[-2].body)

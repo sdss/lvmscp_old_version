@@ -11,6 +11,8 @@ from lvmscp.exceptions import lvmscpError
 from . import parser
 
 
+# from clu.parsers.click import command_parser
+
 # logging
 log = get_logger("sdss-lvmscp")
 
@@ -52,7 +54,7 @@ async def focus(
     else:
         integ_time = (exptime + 47) * 2
 
-    command.info(f"Total exposure time will be = {integ_time}")
+    command.info(text=f"Total exposure time will be = {integ_time}")
     # Check if lamp is on
     log.debug("Checking arc lamps . . .")
     command.info(text="Checking arc lamps . . .")
@@ -71,7 +73,7 @@ async def focus(
     for nn in range(count):
 
         #   set the hartmann door - left
-        command.info("hartmann left setting . . .")
+        command.info(text="hartmann left setting . . .")
         scp_status_cmd = await command.actor.send_command(
             "lvmscp", f"hartmann set left {spectro}"
         )
@@ -81,14 +83,14 @@ async def focus(
             return command.error("Failed to receive the status of the lvmscp")
         else:
             replies = scp_status_cmd.replies
-            command.info(replies[-2].body)
+            command.info(reply=replies[-2].body)
             final_data.update(replies[-2].body)
 
         # developing the focus command fluid code 2021/09/11 Changgon Kim
         # have to output the data file saved for each lamps, adding the hartmann information
 
         #   Take the arc image
-        command.info("arc image taking . . .")
+        command.info(text="arc image taking . . .")
         scp_status_cmd = await command.actor.send_command(
             "lvmscp", f"exposure 1 flat {exptime} {spectro}"
         )
@@ -99,25 +101,25 @@ async def focus(
         else:
             replies = scp_status_cmd.replies
             command.info(
-                {
-                    "z1_arc": replies[-2].body["filename"],
-                    "b1_arc": replies[-4].body["filename"],
-                    "r1_arc": replies[-6].body["filename"],
+                reply={
+                    "z1_arc": replies[-2].body["reply"]["filename"],
+                    "b1_arc": replies[-4].body["reply"]["filename"],
+                    "r1_arc": replies[-6].body["reply"]["filename"],
                 }
             )
 
             final_data.update(
                 {
                     "LEFT_ARC": {
-                        "z1_arc": replies[-2].body["filename"],
-                        "b1_arc": replies[-4].body["filename"],
-                        "r1_arc": replies[-6].body["filename"],
+                        "z1_arc": replies[-2].body["reply"]["filename"],
+                        "b1_arc": replies[-4].body["reply"]["filename"],
+                        "r1_arc": replies[-6].body["reply"]["filename"],
                     }
                 }
             )
 
         #   set the hartmann door - right
-        command.info("hartmann right setting . . .")
+        command.info(text="hartmann right setting . . .")
         scp_status_cmd = await command.actor.send_command(
             "lvmscp", f"hartmann set right {spectro}"
         )
@@ -127,11 +129,11 @@ async def focus(
             return command.error("Failed to receive the status of the lvmscp")
         else:
             replies = scp_status_cmd.replies
-            command.info(replies[-2].body)
+            command.info(reply=replies[-2].body)
             final_data.update(replies[-2].body)
 
         #   Take the arc image
-        command.info("arc image taking . . .")
+        command.info(text="arc image taking . . .")
         scp_status_cmd = await command.actor.send_command(
             "lvmscp", f"exposure 1 flat {exptime} {spectro}"
         )
@@ -142,25 +144,25 @@ async def focus(
         else:
             replies = scp_status_cmd.replies
             command.info(
-                {
-                    "z1_arc": replies[-2].body["filename"],
-                    "b1_arc": replies[-4].body["filename"],
-                    "r1_arc": replies[-6].body["filename"],
+                reply={
+                    "z1_arc": replies[-2].body["reply"]["filename"],
+                    "b1_arc": replies[-4].body["reply"]["filename"],
+                    "r1_arc": replies[-6].body["reply"]["filename"],
                 }
             )
             final_data.update(
                 {
                     "RIGHT_ARC": {
-                        "z1_arc": replies[-2].body["filename"],
-                        "b1_arc": replies[-4].body["filename"],
-                        "r1_arc": replies[-6].body["filename"],
+                        "z1_arc": replies[-2].body["reply"]["filename"],
+                        "b1_arc": replies[-4].body["reply"]["filename"],
+                        "r1_arc": replies[-6].body["reply"]["filename"],
                     }
                 }
             )
 
         if dark:
             #   take the dark image
-            command.info("dark image taking . . .")
+            command.info(text="dark image taking . . .")
             scp_status_cmd = await command.actor.send_command(
                 "lvmscp", f"exposure 1 dark {exptime} {spectro}"
             )
@@ -171,25 +173,25 @@ async def focus(
             else:
                 replies = scp_status_cmd.replies
                 command.info(
-                    {
-                        "z1_dark": replies[-2].body["filename"],
-                        "b1_dark": replies[-4].body["filename"],
-                        "r1_dark": replies[-6].body["filename"],
+                    reply={
+                        "z1_dark": replies[-2].body["reply"]["filename"],
+                        "b1_dark": replies[-4].body["reply"]["filename"],
+                        "r1_dark": replies[-6].body["reply"]["filename"],
                     }
                 )
 
                 final_data.update(
                     {
                         "DARK": {
-                            "z1_dark": replies[-2].body["filename"],
-                            "b1_dark": replies[-4].body["filename"],
-                            "r1_dark": replies[-6].body["filename"],
+                            "z1_dark": replies[-2].body["reply"]["filename"],
+                            "b1_dark": replies[-4].body["reply"]["filename"],
+                            "r1_dark": replies[-6].body["reply"]["filename"],
                         }
                     }
                 )
 
     # information of the saved files
-    command.info(final_data)
+    command.info(focus=final_data)
     command.finish()
 
 
@@ -223,5 +225,8 @@ async def check_flat_lamp(command):
             if value == 1:
                 command.info(text=f"{key} flat lamp is on!")
 
-        lamp_on.update(check_lamp)
-        return lamp_on
+        if sum > 0:
+            lamp_on.update(check_lamp)
+            return lamp_on
+        elif sum == 0:
+            return False

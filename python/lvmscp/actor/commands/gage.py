@@ -6,6 +6,9 @@ from lvmscp.actor.supervisor import Supervisor
 from . import parser
 
 
+# from clu.parsers.click import command_parser
+
+
 @parser.group()
 def gage(*args):
     """control the hartmann door."""
@@ -23,5 +26,5 @@ def gage(*args):
 async def setccd(command: Command, supervisors: dict[str, Supervisor], ccd: str):
     """set the CCD to measure gage"""
     supervisors["sp1"].testccd = ccd
-    command.info(f"The test CCD for linear gages has changed to {ccd}")
+    command.info(text=f"The test CCD for linear gages has changed to {ccd}")
     command.finish()

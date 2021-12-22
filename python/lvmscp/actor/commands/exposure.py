@@ -10,6 +10,7 @@ import asyncio
 import datetime
 import json
 import logging
+import re
 
 import click
 
@@ -19,6 +20,9 @@ from lvmscp.actor.supervisor import Supervisor
 from lvmscp.exceptions import lvmscpError
 
 from . import parser
+
+
+# from clu.parsers.click import command_parser
 
 
 # logging
@@ -33,7 +37,7 @@ log.sh.setLevel(logging.DEBUG)
 @click.argument("COUNT", type=int, default=1, required=False)
 @click.argument(
     "FLAVOUR",
-    type=click.Choice(["bias", "object", "flat", "dark"]),
+    type=click.Choice(["bias", "object", "arc", "dark"]),
     default="object",
     required=False,
 )
@@ -44,12 +48,20 @@ log.sh.setLevel(logging.DEBUG)
     default="sp1",
     required=False,
 )
+@click.argument("BINNING", type=int, default=1, required=False)
 @click.option(
     "--flush",
     "flush",
     default="no",
     required=False,
     help="Flush before the exposure",
+)
+@click.option(
+    "--header",
+    type=str,
+    default="{}",
+    required=False,
+    help="JSON string with additional header keyword-value pairs. Avoid using spaces.",
 )
 async def exposure(
     command,
@@ -58,20 +70,27 @@ async def exposure(
     count: int,
     flavour: str,
     spectro: str,
+    binning: int,
     flush: str,
+    header: str,
 ):
     """Exposure command controlling all lower actors"""
+    data_directory = []
 
     # Check the exposure time input (bias = 0.0)
     log.debug(f"{pretty(datetime.datetime.now())} | Checking exposure time")
     if flavour != "bias" and exptime is None:
-        log.error("EXPOSURE-TIME is required unless --flavour=bias.")
+        log.error(
+            f"{pretty(datetime.datetime.now())} | EXPOSURE-TIME is required unless --flavour=bias."
+        )
         raise click.UsageError("EXPOSURE-TIME is required unless --flavour=bias.")
     elif flavour == "bias":
         exptime = 0.0
 
     if exptime < 0.0:
-        log.error("EXPOSURE-TIME cannot be negative")
+        log.error(
+            f"{pretty(datetime.datetime.now())} | EXPOSURE-TIME cannot be negative"
+        )
         raise click.UsageError("EXPOSURE-TIME cannot be negative")
 
     # lock for exposure sequence only running for one delegate
@@ -85,7 +104,7 @@ async def exposure(
             command.info(text="lvmnps OK!")
             pass
         else:
-            log.error(err)
+            log.error(f"{pretty(datetime.datetime.now())} | {err}")
             return command.fail(text=err)
 
         err = await check_actor_ping(command, "archon")
@@ -94,7 +113,7 @@ async def exposure(
             command.info(text="archon OK!")
             pass
         else:
-            log.error(err)
+            log.error(f"{pretty(datetime.datetime.now())} | {err}")
             return command.fail(text=err)
 
         err = await check_actor_ping(command, "lvmieb")
@@ -103,63 +122,67 @@ async def exposure(
             command.info(text="lvmieb OK!")
             pass
         else:
-            log.error(err)
+            log.error(f"{pretty(datetime.datetime.now())} | {err}")
             return command.fail(text=err)
 
-        log.debug("Checking device Power . . .")
+        log.debug(f"{pretty(datetime.datetime.now())} | Checking device Power . . .")
         command.info(text="Checking device Power . . .")
         err = await check_device_power(command, spectro)
         if err is True:
-            log.info("device power OK!")
+            log.info(f"{pretty(datetime.datetime.now())} | device power OK!")
             command.info(text="device power OK!")
             pass
         else:
-            log.error(err)
+            log.error(f"{pretty(datetime.datetime.now())} | {err}")
             return command.fail(text=err)
 
-        log.debug("Checking Shutter closed . . .")
+        log.debug(f"{pretty(datetime.datetime.now())} | Checking Shutter closed . . .")
         command.info(text="Checking Shutter Closed . . .")
         err = await check_shutter_closed(command, spectro)
         if err is True:
-            log.info("Shutter Closed!")
+            log.info(f"{pretty(datetime.datetime.now())} | Shutter Closed!")
             command.info(text="Shutter Closed!")
             pass
         else:
-            log.error(err)
+            log.error(f"{pretty(datetime.datetime.now())} | {err}")
             return command.fail(text=err)
 
         if flavour == "object":
-            log.debug("Checking hartmann opened . . .")
+            log.debug(
+                f"{pretty(datetime.datetime.now())} | Checking hartmann opened . . ."
+            )
             command.info(text="Checking hartmann opened . . .")
             err = await check_hartmann_opened(command, spectro)
             if err is True:
-                log.info("Hartmann doors opened!")
+                log.info(f"{pretty(datetime.datetime.now())} | Hartmann doors opened!")
                 command.info(text="Hartmann doors opened!")
                 pass
             else:
-                log.error(err)
+                log.error(f"{pretty(datetime.datetime.now())} | {err}")
                 return command.fail(text=err)
 
-        log.debug("Checking archon controller initialized . . .")
+        log.debug(
+            f"{pretty(datetime.datetime.now())} | Checking archon controller initialized . . ."
+        )
         command.info(text="Checking archon controller initialized . . .")
         err = await check_archon(command, spectro)
         if err is True:
-            log.info("archon initialized!")
+            log.info(f"{pretty(datetime.datetime.now())} | archon initialized!")
             command.info(text="archon initialized!")
             pass
         else:
-            log.error(err)
+            log.error(f"{pretty(datetime.datetime.now())} | {err}")
             return command.fail(text=err)
 
         check_lamp = None
-        if flavour == "flat":
-            log.debug("Checking flat lamps . . .")
-            command.info(text="Checking flat lamps . . .")
+        if flavour == "arc":
+            log.debug(f"{pretty(datetime.datetime.now())} | Checking arc lamps . . .")
+            command.info(text="Checking arc lamps . . .")
 
             try:
-                check_lamp = await check_flat_lamp(command)
+                check_lamp = await check_arc_lamp(command)
             except Exception as err:
-                log.error(err)
+                log.error(f"{pretty(datetime.datetime.now())} | {err}")
                 return command.fail(text=err)
 
             if check_lamp:
@@ -168,48 +191,54 @@ async def exposure(
                 for key, value in check_lamp.items():
                     sum = sum + value
                     if value == 1:
-                        log.info("{key} arc lamps on!")
-                        command.info(text=f"{key} flat lamp is on!")
+                        log.info(
+                            f"{pretty(datetime.datetime.now())} | {key} arc lamps on!"
+                        )
+                        command.info(text=f"{key} arc lamp is on!")
                         lamp_on.update(key=value)
-                print(f"sum is {sum}")
+                log.debug(f"{pretty(datetime.datetime.now())} | sum is {sum}")
                 if sum == 0:
-                    return command.fail(text="flat lamps are all off . . .")
+                    return command.fail(text="arc lamps are all off . . .")
             elif not check_lamp:
                 return command.fail(text="Power Switch status is not Reading . . .")
 
-        log.info("Starting the exposure.")
+        log.info(f"{pretty(datetime.datetime.now())} | Starting the exposure.")
         command.info(text="Starting the exposure.")
         # start exposure loop
         for nn in range(count):
 
-            log.info(f"Taking exposure {nn + 1} of {count}.")
-            command.info(f"Taking exposure {nn + 1} of {count}.")
+            log.info(
+                f"{pretty(datetime.datetime.now())} | Taking exposure {nn + 1} of {count}."
+            )
+            command.info(text=f"Taking exposure {nn + 1} of {count}.")
 
             header_json = await extra_header_telemetry(
-                command, spectro, check_lamp, supervisors
+                command, spectro, check_lamp, supervisors, header
             )
 
             # Flushing before CCD exposure
             if flush == "yes":
                 flush_count = 1
                 if flush_count > 0:
-                    log.info("Flushing . . .")
-                    command.info("Flushing . . .")
+                    log.info(f"{pretty(datetime.datetime.now())} | Flushing . . .")
+                    command.info(text="Flushing . . .")
                     archon_cmd = await (
                         await command.actor.send_command(
                             "archon", f"flush {flush_count}"
                         )
                     )
                     if archon_cmd.status.did_fail:
-                        log.error("Failed flushing")
+                        log.error(
+                            f"{pretty(datetime.datetime.now())} | Failed flushing"
+                        )
                         return command.fail(text="Failed flushing")
 
             # Start CCD exposure
-            log.debug("Start CCD exposure . . .")
+            log.info(f"{pretty(datetime.datetime.now())} | Start CCD exposure . . .")
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
-                    f"expose start --controller {spectro} --{flavour} {exptime}",
+                    f"expose start --controller {spectro} --{flavour} --binning {binning} {exptime}",  # noqa E501
                 )
             )
             if archon_cmd.status.did_fail:
@@ -222,13 +251,15 @@ async def exposure(
                 )
             else:
                 reply = archon_cmd.replies
-                log.debug(reply[-2].body["text"])
+                log.debug(
+                    f"{pretty(datetime.datetime.now())} | {reply[-2].body['text']}"
+                )
                 command.info(text=reply[-2].body["text"])
 
             if (flavour != "bias" and flavour != "dark") and exptime > 0:
                 # Use command to access the actor and command the shutter
-                log.info("Opening the shutter")
-                command.info("Opening the shutter")
+                log.info(f"{pretty(datetime.datetime.now())} | Opening the shutter")
+                command.info(text="Opening the shutter")
 
                 shutter_cmd = await command.actor.send_command(
                     "lvmieb", f"shutter open {spectro}"
@@ -240,19 +271,25 @@ async def exposure(
                         "lvmieb", f"shutter close {spectro}"
                     )
                     await command.actor.send_command("archon", "expose abort --flush")
-                    log.error("Shutter failed to open")
+                    log.error(
+                        f"{pretty(datetime.datetime.now())} | Shutter failed to open"
+                    )
                     return command.fail(text="Shutter failed to open")
 
                 # Report status of the shutter
                 replies = shutter_cmd.replies
                 shutter_status = replies[-2].body[spectro]["shutter"]
                 if shutter_status not in ["opened", "closed"]:
-                    log.error(f"Unknown shutter status {shutter_status}.")
+                    log.error(
+                        f"{pretty(datetime.datetime.now())} | Unknown shutter status {shutter_status}."  # noqa E501
+                    )
                     return command.fail(
                         text=f"Unknown shutter status {shutter_status}."
                     )
-                log.info("Shutter is now {shutter_status}.")
-                command.info(f"Shutter is now {shutter_status}.")
+                log.info(
+                    f"{pretty(datetime.datetime.now())} | Shutter is now {shutter_status}."
+                )
+                command.info(text=f"Shutter is now {shutter_status}.")
 
                 if not (
                     await asyncio.create_task(
@@ -260,17 +297,22 @@ async def exposure(
                     )
                 ):
                     await command.actor.send_command("archon", "expose abort --flush")
-                    log.error("Failed to close the shutter")
+                    log.error(
+                        f"{pretty(datetime.datetime.now())} | Failed to close the shutter"
+                    )
                     return command.fail(text="Failed to close the shutter")
             elif flavour == "dark":
                 await asyncio.create_task(stop_exposure_after(command, exptime))
 
             # Readout pending information
-            log.debug("readout . . .")
+            log.debug(f"{pretty(datetime.datetime.now())} | readout . . .")
             command.info(text="readout . . .")
             # Finish exposure
-            log.debug("archon expose finish --header")
-            print(header_json)
+            log.debug(
+                f"{pretty(datetime.datetime.now())} | archon expose finish --header"
+            )
+            log.debug(f"{pretty(datetime.datetime.now())} | {header_json}")
+
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
@@ -283,8 +325,10 @@ async def exposure(
 
             if archon_cmd.status.did_fail:
                 # command.info(replies[-2].body)
-                log.info(replies[-2].body)
-                log.error("Failed reading out exposure")
+                log.info(f"{pretty(datetime.datetime.now())} | {replies[-2].body}")
+                log.error(
+                    f"{pretty(datetime.datetime.now())} | Failed reading out exposure"
+                )
                 return command.fail(text="Failed reading out exposure")
 
                 # command.finish()
@@ -303,16 +347,21 @@ async def exposure(
                         command.info(text="readout finished!")
                         break
 
-                command.info(replies[-8].body)
-                command.info(replies[-7].body)
-                command.info(replies[-6].body)
-                command.info(replies[-5].body)
-                command.info(replies[-4].body)
-                command.info(replies[-3].body)
-                command.info(replies[-2].body)
+                command.info(reply=replies[-8].body)
+                command.info(reply=replies[-7].body)
+                command.info(reply=replies[-6].body)
+                command.info(reply=replies[-5].body)
+                command.info(reply=replies[-4].body)
+                command.info(reply=replies[-3].body)
+                command.info(reply=replies[-2].body)
 
-        log.info("Exposure Sequence done!")
-        return command.finish(text="Exposure sequence done!")
+                data_directory.append(replies[-2].body["filename"])
+                data_directory.append(replies[-4].body["filename"])
+                data_directory.append(replies[-6].body["filename"])
+
+        log.info(f"{pretty(datetime.datetime.now())} | Exposure Sequence done!")
+        command.info(text="Exposure Sequence done!")
+        return command.finish(filename=data_directory)
 
 
 async def stop_exposure_after(command, delay: float):
@@ -327,26 +376,28 @@ async def stop_exposure_after(command, delay: float):
 async def close_shutter_after(command, delay: float, spectro: str):
     """Waits ``delay`` before closing the shutter."""
 
-    log.info("exposing . . .")
+    log.info(f"{pretty(datetime.datetime.now())} | exposing . . .")
     command.info(text="exposing . . .")
     await asyncio.sleep(delay)
 
-    log.info("Closing the shutter")
+    log.info(f"{pretty(datetime.datetime.now())} | Closing the shutter")
     command.info(text="Closing the shutter")
     shutter_cmd = await command.actor.send_command("lvmieb", f"shutter close {spectro}")
     await shutter_cmd
 
     if shutter_cmd.status.did_fail:
-        log.error("Shutter failed to close.")
+        log.error(f"{pretty(datetime.datetime.now())} | Shutter failed to close.")
         return command.fail(text="Shutter failed to close.")
 
     replies = shutter_cmd.replies
     shutter_status = replies[-2].body[spectro]["shutter"]
     if shutter_status not in ["opened", "closed"]:
-        log.error(f"Unknown shutter status {shutter_status!r}.")
+        log.error(
+            f"{pretty(datetime.datetime.now())} | Unknown shutter status {shutter_status!r}."
+        )
         return command.fail(text=f"Unknown shutter status {shutter_status!r}.")
 
-    log.info(f"Shutter is now '{shutter_status}'")
+    log.info(f"{pretty(datetime.datetime.now())} | Shutter is now '{shutter_status}'")
     command.info(text=f"Shutter is now '{shutter_status}'")
     return True
 
@@ -446,14 +497,14 @@ async def check_archon(command, spectro: str):
             return True
 
 
-async def check_flat_lamp(command):
-    """Check the flat lamp status"""
+async def check_arc_lamp(command):
+    """Check the arc lamp status"""
 
-    flat_lamp_cmd = await (await command.actor.send_command("lvmnps", "status"))
-    if flat_lamp_cmd.status.did_fail:
+    arc_lamp_cmd = await (await command.actor.send_command("lvmnps", "status"))
+    if arc_lamp_cmd.status.did_fail:
         return False
     else:
-        replies = flat_lamp_cmd.replies
+        replies = arc_lamp_cmd.replies
 
         check_lamp = {
             "625NM": replies[-2].body["status"]["DLI-01"]["625 nm LED (M625L4)"][
@@ -471,98 +522,86 @@ async def check_flat_lamp(command):
         return check_lamp
 
 
-async def extra_header_telemetry(command, spectro: str, check_lamp, supervisors):
+async def extra_header_telemetry(
+    command, spectro: str, check_lamp, supervisors, header: str
+):
     """telemetry from the devices and add it on the header"""
     # Build extra header.
-    scp_status_cmd = await command.actor.send_command("lvmscp", "status")
-    await scp_status_cmd
 
-    if scp_status_cmd.status.did_fail:
-        return "Failed to receive the status of the lvmscp"
-    else:
-        replies = scp_status_cmd.replies
-        rhtRH1 = replies[-2].body["IEB"]["HUMIDITY"][spectro]["rhtRH1"]
-        rhtRH2 = replies[-2].body["IEB"]["HUMIDITY"][spectro]["rhtRH2"]
-        rhtRH3 = replies[-2].body["IEB"]["HUMIDITY"][spectro]["rhtRH3"]
-        rhtT1 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rhtT1"]
-        rhtT2 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rhtT2"]
-        rhtT3 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rhtT3"]
-        rtd1 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd1"]
-        rtd2 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd2"]
-        rtd3 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd3"]
-        rtd4 = replies[-2].body["IEB"]["TEMPERATURE"][spectro]["rtd4"]
-        r1pres = replies[-2].body["TRANSDUCER"]["PRESSURE"][spectro]["r1"]
-        b1pres = replies[-2].body["TRANSDUCER"]["PRESSURE"][spectro]["b1"]
-        z1pres = replies[-2].body["TRANSDUCER"]["PRESSURE"][spectro]["z1"]
-        testccd = replies[-2].body["TESTCCD"]
-        gage_A = replies[-2].body["LINEARGAGE"][spectro][testccd]["A"]
-        gage_B = replies[-2].body["LINEARGAGE"][spectro][testccd]["B"]
-        gage_C = replies[-2].body["LINEARGAGE"][spectro][testccd]["C"]
+    if supervisors[spectro].ready:
+        await supervisors[spectro].UpdateStatus(command)
 
-        if replies[-2].body["LN2VALVE"]["LN2NIR"] == "ON":
-            ln2_nir = "ON"
-        else:
-            ln2_nir = "OFF"
+    left = -1
+    if supervisors[spectro].hartmann_left_status == "opened":
+        left = 0
+    elif supervisors[spectro].hartmann_left_status == "closed":
+        left = 1
 
-        if replies[-2].body["LN2VALVE"]["LN2RED"] == "ON":
-            ln2_red = "ON"
-        else:
-            ln2_red = "OFF"
+    right = -1
+    if supervisors[spectro].hartmann_right_status == "opened":
+        right = 0
+    elif supervisors[spectro].hartmann_right_status == "closed":
+        right = 1
 
-        left = -1
-        if replies[-2].body["HARTMANN"][spectro]["hartmann_left_status"] == "opened":
-            left = 0
-        elif replies[-2].body["HARTMANN"][spectro]["hartmann_left_status"] == "closed":
-            left = 1
+    header_dict = {
+        "rhtRH1": (supervisors[spectro].rhtRH1, "IEB rht sensor humidity [%]"),
+        "rhtRH2": (supervisors[spectro].rhtRH2, "IEB rht sensor humidity [%]"),
+        "rhtRH3": (supervisors[spectro].rhtRH3, "IEB rht sensor humidity [%]"),
+        "rhtT1": (supervisors[spectro].rhtT1, "IEB rht sensor Temperature [C]"),
+        "rhtT2": (supervisors[spectro].rhtT2, "IEB rht sensor Temperature [C]"),
+        "rhtT3": (supervisors[spectro].rhtT3, "IEB rht sensor Temperature [C]"),
+        "rtd1": (supervisors[spectro].rtd1, "IEB rtd sensor Temperature [C]"),
+        "rtd2": (supervisors[spectro].rtd2, "IEB rtd sensor Temperature [C]"),
+        "rtd3": (supervisors[spectro].rtd3, "IEB rtd sensor Temperature [C]"),
+        "rtd4": (supervisors[spectro].rtd4, "IEB rtd sensor Temperature [C]"),
+        "LN2NIR": (
+            supervisors[spectro].ln2nir,
+            "Cryogenic solenoid valve power of NIR camera for LN2",
+        ),
+        "LN2RED": (
+            supervisors[spectro].ln2red,
+            "Cryogenic solenoid valve power of RED camera for LN2",
+        ),
+        "HARTMANN": (f"{left} {right}", "Left/right. 0=open 1=closed"),
+        "RPRESS": (
+            supervisors[spectro].r1_pressure,
+            "Pressure from the transducer of r1 cryostat",
+        ),
+        "BPRESS": (
+            supervisors[spectro].b1_pressure,
+            "Pressure from the transducer of b1 cryostat",
+        ),
+        "ZPRESS": (
+            supervisors[spectro].z1_pressure,
+            "Pressure from the transducer of z1 cryostat",
+        ),
+        supervisors[spectro].testccd: {
+            "DEPTHA": supervisors[spectro].gage_A,
+            "DEPTHB": supervisors[spectro].gage_B,
+            "DEPTHC": supervisors[spectro].gage_C,
+        },
+    }
+    if check_lamp:
+        for key, value in check_lamp.items():
+            if value:
+                check_lamp[key] = "ON"
+            else:
+                check_lamp[key] = "OFF"
 
-        right = -1
-        if replies[-2].body["HARTMANN"][spectro]["hartmann_right_status"] == "opened":
-            right = 0
-        elif replies[-2].body["HARTMANN"][spectro]["hartmann_right_status"] == "closed":
-            right = 1
+        log.debug(f"{pretty(datetime.datetime.now())} | check_lamp: {check_lamp}")
+        header_dict.update(check_lamp)
+    log.debug(f"{pretty(datetime.datetime.now())} | header_dict: {header_dict}")
 
-        header_dict = {
-            "rhtRH1": (rhtRH1, "IEB rht sensor humidity [%]"),
-            "rhtRH2": (rhtRH2, "IEB rht sensor humidity [%]"),
-            "rhtRH3": (rhtRH3, "IEB rht sensor humidity [%]"),
-            "rhtT1": (rhtT1, "IEB rht sensor Temperature [C]"),
-            "rhtT2": (rhtT2, "IEB rht sensor Temperature [C]"),
-            "rhtT3": (rhtT3, "IEB rht sensor Temperature [C]"),
-            "rtd1": (rtd1, "IEB rtd sensor Temperature [C]"),
-            "rtd2": (rtd2, "IEB rtd sensor Temperature [C]"),
-            "rtd3": (rtd3, "IEB rtd sensor Temperature [C]"),
-            "rtd4": (rtd4, "IEB rtd sensor Temperature [C]"),
-            "LN2NIR": (
-                ln2_nir,
-                "Cryogenic solenoid valve power of NIR camera for LN2",
-            ),
-            "LN2RED": (
-                ln2_red,
-                "Cryogenic solenoid valve power of RED camera for LN2",
-            ),
-            "HARTMANN": (f"{left} {right}", "Left/right. 0=open 1=closed"),
-            "RPRESS": (r1pres, "Pressure from the transducer of r1 cryostat"),
-            "BPRESS": (b1pres, "Pressure from the transducer of b1 cryostat"),
-            "ZPRESS": (z1pres, "Pressure from the transducer of z1 cryostat"),
-            supervisors[spectro].testccd: {
-                "DEPTHA": gage_A,
-                "DEPTHB": gage_B,
-                "DEPTHC": gage_C,
-            },
-        }
-        if check_lamp:
-            for key, value in check_lamp.items():
-                if value:
-                    check_lamp[key] = "ON"
-                else:
-                    check_lamp[key] = "OFF"
+    # adding header to here 20211222 CK
+    p = re.compile("(?<!\\\\)'")
+    header = p.sub('"', header)
+    extra_header = json.loads(header)
+    if header:
+        header_dict.update(extra_header)
 
-            print(check_lamp)
-            header_dict.update(check_lamp)
-        print(header_dict)
-        header_json = json.dumps(header_dict, indent=None)
+    header_json = json.dumps(header_dict, indent=None)
 
-        return header_json
+    return header_json
 
 
 def pretty(time):

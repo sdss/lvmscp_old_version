@@ -9,6 +9,7 @@
 from __future__ import absolute_import, annotations, division, print_function
 
 import asyncio
+import os
 from contextlib import suppress
 
 from clu.actor import AMQPActor
@@ -41,6 +42,11 @@ class lvmscp(AMQPActor):
         supervisors: tuple[Supervisor, ...] = (),
         **kwargs,
     ):
+        if "schema" not in kwargs:
+            kwargs["schema"] = os.path.join(
+                os.path.dirname(__file__),
+                "../etc/schema.json",
+            )
         super().__init__(*args, **kwargs)
         self.supervisors = {s.name: s for s in supervisors}
 
