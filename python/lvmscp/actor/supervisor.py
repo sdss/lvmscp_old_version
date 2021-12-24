@@ -14,10 +14,16 @@ log.sh.setLevel(logging.DEBUG)
 
 
 class Supervisor:
+    """This is the class that has the telemetry data and functions
+    of each spectrograph sp1, sp2, sp3.
+    This class will be instantiated and run with the actor.
+    Each spectrograph sp1, sp2, sp3 will have
+    instance of this Supervisor class, controlling the variables
+    """
+
     def __init__(self, spectro: str):
 
-        self.test = 1
-        # check the availabilty of the spectrograph
+        # Now only sp1 spectrograph is available 20211224
         if spectro == "sp1":
             self.ready = True
             self.name = spectro
@@ -68,6 +74,7 @@ class Supervisor:
             self.b1heater = "ERROR"
             self.z1heater = "ERROR"
             self.status_dict = {}
+        # sp2 and sp3 spectrograph is unavailable now. 20211224
         elif spectro == "sp2":
             self.ready = False
             self.name = spectro
@@ -170,57 +177,28 @@ class Supervisor:
             self.status_dict = {}
 
     async def UpdateStatus(self, command: Command):
-        """updates the parameters of the spectrograph
+        """updates the parameters of the spectrograph.
+        The variables are all member variables of the Supervisor instance,
+        and updated when this function is called.
 
         Args:
-            command (Command): [description]
+            command (Command): this is the Command instance for actor commanding.
+            Since we update the status of the lvmscp actor by sending commands
+            to lower level actors (lvmieb, archon), the command instance
+            will use the send_command method to send commands to lower level.
         """
 
         log.info(f"{pretty(datetime.datetime.now())} | before lvmscp update")
 
-        """
-        nps_status_cmd = await command.actor.send_command("lvmnps", "status")
-        await nps_status_cmd
-
-        if nps_status_cmd.status.did_fail:
-            command.info(text="Failed to receive the power status from power switch")
-        else:
-            replies = nps_status_cmd.replies
-
-        log.info(f"{pretty(datetime.datetime.now())} | after lvmnps status")
-
-        self.ln2nir = self.convert(replies[-2].body["status"]["DLI-02"]["LN2 NIR Valve"]["state"])
-        self.ln2red = self.convert(replies[-2].body["status"]["DLI-02"]["LN2 Red Valve"]["state"])
-
-        self.archon_power_nps = self.convert(
-            replies[-2].body["status"]["DLI-02"]["LVM-Archon-02"]["state"]
-        )
-
-        self.argon = self.convert(replies[-2].body["status"]["DLI-03"]["Argon"]["state"])
-        self.xenon = self.convert(replies[-2].body["status"]["DLI-03"]["Xenon"]["state"])
-        self.hgar = self.convert(replies[-2].body["status"]["DLI-03"]["Hg (Ar)"]["state"])
-        self.ldls = self.convert(replies[-2].body["status"]["DLI-03"]["LDLS"]["state"])
-        self.krypton = self.convert(replies[-2].body["status"]["DLI-03"]["Krypton"]["state"])
-        self.neon = self.convert(replies[-2].body["status"]["DLI-03"]["Neon"]["state"])
-        self.hgne = self.convert(replies[-2].body["status"]["DLI-03"]["Hg (Ne)"]["state"])
-
-        self.ieb06 = self.convert(replies[-2].body["status"]["DLI-02"]["IEB06"]["state"])
-
-        self.rpi = self.convert(replies[-2].body["status"]["DLI-02"]["RPi"]["state"])
-        self.pres_transducer = self.convert(
-            replies[-2].body["status"]["DLI-02"]["Pressure transducers"]["state"]
-        )
-
-        """
         # check the status of archon controller
-
         archon_status_cmd = await command.actor.send_command("archon", "status")
         await archon_status_cmd
 
         if archon_status_cmd.status.did_fail:
-            # command.info(text="Failed to receive the status from archon")
+            command.info(text="Failed to receive the status from archon")
             pass
         else:
+            # more information can be added here
             replies = archon_status_cmd.replies
             self.archon_status = replies[-2].body["status"]["status_names"]
             self.r1ccd_temp = replies[-2].body["status"]["mod2/tempa"]
@@ -230,10 +208,9 @@ class Supervisor:
             self.b1heater = replies[-2].body["status"]["mod12/heateraoutput"]
             self.z1heater = replies[-2].body["status"]["mod12/heaterboutput"]
 
-        # adding the status of other self.namegraphs 20210908
-        # work from here to add the status of multiple self.namegraphes
-
+        # check the ready value of the spectrograpgh Supervisor instance
         if self.ready:
+            # Check the wago power module from lvmieb
             wago_power_status_cmd = await command.actor.send_command(
                 "lvmieb", f"wago getpower {self.name}"
             )
@@ -251,7 +228,7 @@ class Supervisor:
                     "hartmann_right_power"
                 ]
 
-            # Check the status (opened / closed) of the shutter
+            # Check the status (opened / closed) of the shutter from lvmieb
             shutter_status_cmd = await command.actor.send_command(
                 "lvmieb", f"shutter status {self.name}"
             )
@@ -263,8 +240,7 @@ class Supervisor:
                 replies = shutter_status_cmd.replies
                 self.shutter_status = replies[-2].body[self.name]["shutter"]
 
-            # Check the status (opened / closed) of the hartmann doors
-
+            # Check the status (opened / closed) of the hartmann doors from lvmieb
             hartmann_status_cmd = await command.actor.send_command(
                 "lvmieb", f"hartmann status {self.name}"
             )
@@ -279,8 +255,7 @@ class Supervisor:
                     "hartmann_right"
                 ]
 
-            # Check the status of the wago module (wago status)
-
+            # Check the status of the wago sensor module (wago status)
             wago_telemetry_status_cmd = await command.actor.send_command(
                 "lvmieb", f"wago status {self.name}"
             )
@@ -305,7 +280,6 @@ class Supervisor:
                 self.rtd4 = replies[-2].body[self.name]["rtd4"]
 
             # Check the status of the transducer
-
             transducer_status_cmd = await asyncio.wait_for(
                 command.actor.send_command("lvmieb", f"transducer status {self.name}"),
                 1,
@@ -327,7 +301,6 @@ class Supervisor:
                 self.z1_temperature = replies[-2].body[self.name]["z1_temperature"]
 
             # Check the status of the linear depth gage
-
             gage_status_cmd = await asyncio.wait_for(
                 command.actor.send_command("lvmieb", f"depth status {self.name} z1"), 1
             )
@@ -341,7 +314,7 @@ class Supervisor:
                 replies = gage_status_cmd.replies
 
             # repeat the status command if the A value is wrong.
-
+            # A value is not updated frequently due to hardware connection
             if replies[-2].body[self.name]["z1"]["A"] == -999.0:
                 gage_status_cmd = await asyncio.wait_for(
                     command.actor.send_command(
@@ -363,25 +336,36 @@ class Supervisor:
             self.gage_C = replies[-2].body[self.name]["z1"]["C"]
 
         log.info(f"{pretty(datetime.datetime.now())} | after lvmscp update")
-
         return
-
-    def convert(self, flag: bool):
-        if flag:
-            return "ON"
-        else:
-            return "OFF"
 
 
 def pretty(time):
+    """Function for logging
+
+    Args:
+        time ([type]): datetime.datetime.now() is general input
+
+    Returns:
+        [type]: change the color for logging
+    """
     return f"{bcolors.OKCYAN}{bcolors.BOLD}{time}{bcolors.ENDC}"
 
 
 def pretty2(time):
+    """Function for logging
+
+    Args:
+        time ([type]): datetime.datetime.now() is general input
+
+    Returns:
+        [type]: change the color for logging
+    """
     return f"{bcolors.WARNING}{bcolors.BOLD}{time}{bcolors.ENDC}"
 
 
 class bcolors:
+    """structure class for color values."""
+
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"

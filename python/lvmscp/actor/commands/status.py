@@ -172,6 +172,8 @@ def updateReadyDict(item: dict, supervisors):
                 }
             )
 
+    return
+
 
 def convert(flag: bool):
     if flag:

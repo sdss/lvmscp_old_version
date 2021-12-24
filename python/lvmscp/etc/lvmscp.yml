@@ -17,4 +17,4 @@ actor:
   name: lvmscp
   host: localhost
   port: 5672
-  log_dir: '~/data/logs/lvmnps'
+  log_dir: '~/data/logs/lvmscp'

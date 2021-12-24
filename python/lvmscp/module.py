@@ -48,7 +48,7 @@ class API:
         print(result)
         return result
 
-    def exposure(
+    def expose(
         exptime=0.0, Nexp=1, imtype=None, shutter=True, metadata=None, ccdmodes=None
     ):
 
@@ -63,7 +63,9 @@ class API:
 
         # sequential
         try:
-            result = lvmscp.exposure(Nexp, imtype, exptime, "sp1")
+            # 2 is the binning
+            # '\'{"test": 1}\'' is the header data
+            result = lvmscp.exposure(Nexp, imtype, exptime, "sp1", 2, "'{\"test\": 1}'")
 
         except Exception as e:
             amqpc.log.error(f"Exception: {e}")

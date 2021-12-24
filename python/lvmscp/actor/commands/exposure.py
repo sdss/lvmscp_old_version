@@ -10,7 +10,6 @@ import asyncio
 import datetime
 import json
 import logging
-import re
 
 import click
 
@@ -49,19 +48,13 @@ log.sh.setLevel(logging.DEBUG)
     required=False,
 )
 @click.argument("BINNING", type=int, default=1, required=False)
+@click.argument("HEADER", type=str, default="{}", required=False)
 @click.option(
     "--flush",
     "flush",
     default="no",
     required=False,
     help="Flush before the exposure",
-)
-@click.option(
-    "--header",
-    type=str,
-    default="{}",
-    required=False,
-    help="JSON string with additional header keyword-value pairs. Avoid using spaces.",
 )
 async def exposure(
     command,
@@ -74,7 +67,25 @@ async def exposure(
     flush: str,
     header: str,
 ):
-    """Exposure command controlling all lower actors"""
+    """This is the exposure command for running the exposure sequnce.
+
+    Args:
+        command ([type]): Command class from clu.actor.Commands
+        supervisors (dict[str, Supervisor]): Supervisor class from lvmscp.supervisor.py
+        exptime (float): exposure time
+        count (int): count of frames
+        flavour (str): bias/dark/arc/object type of image
+        spectro (str): sp1/sp2/sp3 the spectrograph to take exposure.
+        binning (int): binning of the CCD camera
+        flush (str): flushing parameter, not required
+        header (str): header metadata. The example structure is like such: '\'{"test": 1}\''
+
+    Raises:
+        click.UsageError: UsageError for the click class
+
+    Returns:
+        [type]: command.finish(filename={array of the files})
+    """
     data_directory = []
 
     # Check the exposure time input (bias = 0.0)
@@ -96,6 +107,7 @@ async def exposure(
     # lock for exposure sequence only running for one delegate
     async with exposure_lock:
 
+        # pinging lower actors
         log.debug(f"{pretty(datetime.datetime.now())} | Pinging lower actors . . .")
         command.info(text="Pinging . . .")
         err = await check_actor_ping(command, "lvmnps")
@@ -125,6 +137,7 @@ async def exposure(
             log.error(f"{pretty(datetime.datetime.now())} | {err}")
             return command.fail(text=err)
 
+        # check the power of shutter and hartmann doors
         log.debug(f"{pretty(datetime.datetime.now())} | Checking device Power . . .")
         command.info(text="Checking device Power . . .")
         err = await check_device_power(command, spectro)
@@ -136,6 +149,7 @@ async def exposure(
             log.error(f"{pretty(datetime.datetime.now())} | {err}")
             return command.fail(text=err)
 
+        # Checking the shutter is already closed
         log.debug(f"{pretty(datetime.datetime.now())} | Checking Shutter closed . . .")
         command.info(text="Checking Shutter Closed . . .")
         err = await check_shutter_closed(command, spectro)
@@ -147,7 +161,9 @@ async def exposure(
             log.error(f"{pretty(datetime.datetime.now())} | {err}")
             return command.fail(text=err)
 
+        # when the flavour is object
         if flavour == "object":
+            # Check the hartmann door is all opened for the science exposure
             log.debug(
                 f"{pretty(datetime.datetime.now())} | Checking hartmann opened . . ."
             )
@@ -161,6 +177,7 @@ async def exposure(
                 log.error(f"{pretty(datetime.datetime.now())} | {err}")
                 return command.fail(text=err)
 
+        # Check the archon controller is initialized and on the status of IDLE
         log.debug(
             f"{pretty(datetime.datetime.now())} | Checking archon controller initialized . . ."
         )
@@ -174,6 +191,7 @@ async def exposure(
             log.error(f"{pretty(datetime.datetime.now())} | {err}")
             return command.fail(text=err)
 
+        # Check the status of lamps for arc exposure
         check_lamp = None
         if flavour == "arc":
             log.debug(f"{pretty(datetime.datetime.now())} | Checking arc lamps . . .")
@@ -202,6 +220,7 @@ async def exposure(
             elif not check_lamp:
                 return command.fail(text="Power Switch status is not Reading . . .")
 
+        # starting the exposure
         log.info(f"{pretty(datetime.datetime.now())} | Starting the exposure.")
         command.info(text="Starting the exposure.")
         # start exposure loop
@@ -211,7 +230,7 @@ async def exposure(
                 f"{pretty(datetime.datetime.now())} | Taking exposure {nn + 1} of {count}."
             )
             command.info(text=f"Taking exposure {nn + 1} of {count}.")
-
+            # receive the telemetry data to add on the FIT header
             header_json = await extra_header_telemetry(
                 command, spectro, check_lamp, supervisors, header
             )
@@ -235,6 +254,12 @@ async def exposure(
 
             # Start CCD exposure
             log.info(f"{pretty(datetime.datetime.now())} | Start CCD exposure . . .")
+
+            # archon has to send flavour flat for arc lamps
+            if flavour == "arc":
+                flavour = "flat"
+
+            # send exposure command to archon
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
@@ -256,6 +281,7 @@ async def exposure(
                 )
                 command.info(text=reply[-2].body["text"])
 
+            # opening the shutter for arc and object type frame
             if (flavour != "bias" and flavour != "dark") and exptime > 0:
                 # Use command to access the actor and command the shutter
                 log.info(f"{pretty(datetime.datetime.now())} | Opening the shutter")
@@ -301,18 +327,21 @@ async def exposure(
                         f"{pretty(datetime.datetime.now())} | Failed to close the shutter"
                     )
                     return command.fail(text="Failed to close the shutter")
+            # dark frame doesn't have to open the shutter
             elif flavour == "dark":
-                await asyncio.create_task(stop_exposure_after(command, exptime))
+                await asyncio.create_task(wait_exposure(command, exptime))
 
-            # Readout pending information
-            log.debug(f"{pretty(datetime.datetime.now())} | readout . . .")
-            command.info(text="readout . . .")
             # Finish exposure
             log.debug(
                 f"{pretty(datetime.datetime.now())} | archon expose finish --header"
             )
             log.debug(f"{pretty(datetime.datetime.now())} | {header_json}")
 
+            # Readout pending information
+            log.debug(f"{pretty(datetime.datetime.now())} | readout . . .")
+            command.info(text="readout . . .")
+
+            # send the exposure finish command
             archon_cmd = await (
                 await command.actor.send_command(
                     "archon",
@@ -331,9 +360,8 @@ async def exposure(
                 )
                 return command.fail(text="Failed reading out exposure")
 
-                # command.finish()
             else:
-                # For monitering the status
+                # wait until the status of the archon changes into IDLE
                 while True:
                     readout_cmd = await command.actor.send_command("archon", "status")
                     await readout_cmd
@@ -364,8 +392,16 @@ async def exposure(
         return command.finish(filename=data_directory)
 
 
-async def stop_exposure_after(command, delay: float):
-    """Waits ``delay`` before closing the shutter."""
+async def wait_exposure(command, delay: float):
+    """Waits ``delay`` before closing the shutter for dark exposure
+
+    Args:
+        command ([type]): [description]
+        delay (float): same with exptime
+
+    Returns:
+        True
+    """
 
     command.info(text="dark exposing . . .")
     await asyncio.sleep(delay)
@@ -374,7 +410,16 @@ async def stop_exposure_after(command, delay: float):
 
 
 async def close_shutter_after(command, delay: float, spectro: str):
-    """Waits ``delay`` before closing the shutter."""
+    """Waits ``delay`` before closing the shutter.
+
+    Args:
+        command ([type]): [description]
+        delay (float): [description]
+        spectro (str): [description]
+
+    Returns:
+        [type]: [description]
+    """
 
     log.info(f"{pretty(datetime.datetime.now())} | exposing . . .")
     command.info(text="exposing . . .")
@@ -397,14 +442,23 @@ async def close_shutter_after(command, delay: float, spectro: str):
         )
         return command.fail(text=f"Unknown shutter status {shutter_status!r}.")
 
-    log.info(f"{pretty(datetime.datetime.now())} | Shutter is now '{shutter_status}'")
-    command.info(text=f"Shutter is now '{shutter_status}'")
+    log.info(f"{pretty(datetime.datetime.now())} | Shutter is now {shutter_status}")
+    command.info(text=f"Shutter is now {shutter_status}")
     return True
 
 
-async def check_actor_ping(command, actor_name):
+async def check_actor_ping(command, actor_name: str):
+    """Send the ping command to lower actors (lvmieb, archon, lvmnps) and check if they are running
 
-    # Check the actor is running
+    Args:
+        command ([type]): clu.actor.Command class
+        actor_name (str): name of the actor to send the ping command
+
+    Returns:
+        err string
+        or
+        True (boolian)
+    """
     try:
         status_cmd = await command.actor.send_command(actor_name, "ping")
         await status_cmd
@@ -418,6 +472,18 @@ async def check_actor_ping(command, actor_name):
 
 
 async def check_device_power(command, spectro: str):
+    """Check the power of devices controlled by wago power module.
+    Especially the power of shutter and the hartmann door.
+
+    Args:
+        command ([type]): clu.actor.Command
+        spectro (str): which spectrograph to check sp1/sp2/sp3
+
+    Returns:
+        err string
+        or
+        True
+    """
 
     # check the power of the shutter & hartmann doors
     wago_power_status_cmd = await command.actor.send_command(
@@ -444,7 +510,15 @@ async def check_device_power(command, spectro: str):
 
 
 async def check_shutter_closed(command, spectro: str):
-    """Check the open/closed status of the shutter"""
+    """Check the open/closed status of the shutter
+
+    Args:
+        command ([type]): [description]
+        spectro (str): sp1/sp2/sp3
+
+    Returns:
+        [type]: [description]
+    """
     shutter_status_cmd = await command.actor.send_command(
         "lvmieb", f"shutter status {spectro}"
     )
@@ -463,7 +537,15 @@ async def check_shutter_closed(command, spectro: str):
 
 
 async def check_hartmann_opened(command, spectro: str):
-    # Check the status (opened / closed) of the hartmann doors
+    """Check the status (opened / closed) of the hartmann doors
+
+    Args:
+        command ([type]): [description]
+        spectro (str): [description]
+
+    Returns:
+        [type]: [description]
+    """
     hartmann_status_cmd = await command.actor.send_command(
         "lvmieb", f"hartmann status {spectro}"
     )
@@ -483,8 +565,15 @@ async def check_hartmann_opened(command, spectro: str):
 
 
 async def check_archon(command, spectro: str):
-    """Check the archon CCD status"""
-    # Check that the configuration of archon controller has been loaded.
+    """Check that the configuration of archon controller has been loaded.
+
+    Args:
+        command ([type]): [description]
+        spectro (str): [description]
+
+    Returns:
+        [type]: [description]
+    """
     archon_cmd = await (await command.actor.send_command("archon", "status"))
     if archon_cmd.status.did_fail:
         return "Failed getting status from the controller"
@@ -498,7 +587,14 @@ async def check_archon(command, spectro: str):
 
 
 async def check_arc_lamp(command):
-    """Check the arc lamp status"""
+    """Check the arc lamp status
+
+    Args:
+        command ([type]): [description]
+
+    Returns:
+        [type]: [description]
+    """
 
     arc_lamp_cmd = await (await command.actor.send_command("lvmnps", "status"))
     if arc_lamp_cmd.status.did_fail:
@@ -525,8 +621,18 @@ async def check_arc_lamp(command):
 async def extra_header_telemetry(
     command, spectro: str, check_lamp, supervisors, header: str
 ):
-    """telemetry from the devices and add it on the header"""
-    # Build extra header.
+    """telemetry from the devices and add it on the header
+
+    Args:
+        command ([type]): [description]
+        spectro (str): [description]
+        check_lamp ([type]): [description]
+        supervisors ([type]): [description]
+        header (str): [description]
+
+    Returns:
+        [type]: [description]
+    """
 
     if supervisors[spectro].ready:
         await supervisors[spectro].UpdateStatus(command)
@@ -593,8 +699,7 @@ async def extra_header_telemetry(
     log.debug(f"{pretty(datetime.datetime.now())} | header_dict: {header_dict}")
 
     # adding header to here 20211222 CK
-    p = re.compile("(?<!\\\\)'")
-    header = p.sub('"', header)
+
     extra_header = json.loads(header)
     if header:
         header_dict.update(extra_header)
@@ -605,14 +710,32 @@ async def extra_header_telemetry(
 
 
 def pretty(time):
+    """Function for logging
+
+    Args:
+        time ([type]): datetime.datetime.now() is general input
+
+    Returns:
+        [type]: change the color for logging
+    """
     return f"{bcolors.OKCYAN}{bcolors.BOLD}{time}{bcolors.ENDC}"
 
 
 def pretty2(time):
+    """Function for logging
+
+    Args:
+        time ([type]): datetime.datetime.now() is general input
+
+    Returns:
+        [type]: change the color for logging
+    """
     return f"{bcolors.WARNING}{bcolors.BOLD}{time}{bcolors.ENDC}"
 
 
 class bcolors:
+    """structure class for color values."""
+
     HEADER = "\033[95m"
     OKBLUE = "\033[94m"
     OKCYAN = "\033[96m"
