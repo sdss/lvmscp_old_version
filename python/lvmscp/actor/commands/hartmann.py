@@ -34,7 +34,8 @@ async def set(command, supervisors: dict[str, Supervisor], request: str, spectro
 
     Args:
         command ([type]): The CLU AMQP Command class
-        supervisors (dict[str, Supervisor]): supervisor instance of each spectrograph sp1, sp2, sp3 is the element of the dictionary.
+        supervisors (dict[str, Supervisor]): supervisor instance of each
+        spectrograph sp1, sp2, sp3 is the element of the dictionary.
         request (str): request of which door position that the user want
         spectro (str): the spectrograph that should be choosen
 

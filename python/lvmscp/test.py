@@ -1,6 +1,7 @@
 # this is the example code of how to use the lvmscp as an API
 from lvmscp.module import API as spectrograph_interface
 
+
 spectrograph_interface.ping()
 
 # setting the linear gage

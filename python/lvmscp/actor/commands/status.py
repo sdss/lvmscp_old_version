@@ -119,7 +119,7 @@ def updateReadyDict(item: dict, supervisors):
 
     Args:
         item (dict): the target dictionary that will be updated
-        supervisors ([type]): the supervisor classes that has the real-time telemetry data 
+        supervisors ([type]): the supervisor classes that has the real-time telemetry data
         of each hardware component
     """
 

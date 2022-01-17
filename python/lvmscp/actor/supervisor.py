@@ -338,7 +338,6 @@ class Supervisor:
 
         log.info(f"{pretty(datetime.datetime.now())} | after lvmscp update")
         return
-    
 
 
 def pretty(time):
