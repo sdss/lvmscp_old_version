@@ -28,7 +28,19 @@ def hartmann(*args):
     required=False,
 )
 async def set(command, supervisors: dict[str, Supervisor], request: str, spectro: str):
+    """The Actor command to set the hartmann door on fixed positions, such as
+    left hartmann door opened only, right hartmann door opened only,
+    both hartmann doors opened, and both hartmann doors closed
 
+    Args:
+        command ([type]): The CLU AMQP Command class
+        supervisors (dict[str, Supervisor]): supervisor instance of each spectrograph sp1, sp2, sp3 is the element of the dictionary.
+        request (str): request of which door position that the user want
+        spectro (str): the spectrograph that should be choosen
+
+    Returns:
+        [type]: command.finish()
+    """
     hartmann_status_cmd = await command.actor.send_command(
         "lvmieb", f"hartmann status {spectro}"
     )
@@ -122,4 +134,4 @@ async def set(command, supervisors: dict[str, Supervisor], request: str, spectro
         }
     )
 
-    command.finish()
+    return command.finish()

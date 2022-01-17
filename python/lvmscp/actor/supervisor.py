@@ -74,7 +74,7 @@ class Supervisor:
             self.b1heater = "ERROR"
             self.z1heater = "ERROR"
             self.status_dict = {}
-        # sp2 and sp3 spectrograph is unavailable now. 20211224
+        # sp2 and sp3 spectrograph is unavailable now. 20210117
         elif spectro == "sp2":
             self.ready = False
             self.name = spectro
@@ -177,7 +177,8 @@ class Supervisor:
             self.status_dict = {}
 
     async def UpdateStatus(self, command: Command):
-        """updates the parameters of the spectrograph.
+        """
+        updates the parameters of the spectrograph.
         The variables are all member variables of the Supervisor instance,
         and updated when this function is called.
 
@@ -337,6 +338,7 @@ class Supervisor:
 
         log.info(f"{pretty(datetime.datetime.now())} | after lvmscp update")
         return
+    
 
 
 def pretty(time):

@@ -21,6 +21,15 @@ spectro_list = ["sp1", "sp2", "sp3"]
 
 @parser.command()
 async def status(command: Command, supervisors: dict[str, Supervisor]):
+    """Actor commmand that prints the status of the connected hardwares
+
+    Args:
+        command (Command): CLU AMQP command class
+        supervisors (dict[str, Supervisor]): supervisor instance of spectrograph sp1, sp2, sp3
+
+    Returns:
+        [type]: command.finish(status_dict)
+    """
 
     status_dict = {}
 
@@ -38,6 +47,15 @@ async def status(command: Command, supervisors: dict[str, Supervisor]):
 
 @parser.command()
 async def powerstat(command: Command, supervisors: dict[str, Supervisor]):
+    """Actor command that updates the powerstatus from the lvmnps
+
+    Args:
+        command (Command): CLU AMQP Command class
+        supervisors (dict[str, Supervisor]): supervisor class
+
+    Returns:
+        [type]: command.finish()
+    """
 
     nps_status_cmd = await command.actor.send_command("lvmnps", "status")
     await nps_status_cmd
@@ -97,6 +115,13 @@ async def powerstat(command: Command, supervisors: dict[str, Supervisor]):
 
 
 def updateReadyDict(item: dict, supervisors):
+    """Updating the dictionary of the status
+
+    Args:
+        item (dict): the target dictionary that will be updated
+        supervisors ([type]): the supervisor classes that has the real-time telemetry data 
+        of each hardware component
+    """
 
     for spectro in supervisors:
         if supervisors[spectro].ready:

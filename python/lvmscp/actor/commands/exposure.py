@@ -603,9 +603,6 @@ async def check_arc_lamp(command):
         replies = arc_lamp_cmd.replies
 
         check_lamp = {
-            "625NM": replies[-2].body["status"]["DLI-01"]["625 nm LED (M625L4)"][
-                "state"
-            ],
             "ARGON": replies[-2].body["status"]["DLI-03"]["Argon"]["state"],
             "XENON": replies[-2].body["status"]["DLI-03"]["Xenon"]["state"],
             "HGAR": replies[-2].body["status"]["DLI-03"]["Hg (Ar)"]["state"],

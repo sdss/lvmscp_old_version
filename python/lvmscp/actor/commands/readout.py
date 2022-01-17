@@ -14,6 +14,17 @@ from . import parser
     required=True,
 )
 async def readout(command: Command, supervisors: dict[str, Supervisor], readout: str):
+    """The Actor command to set the readout mode of the CCD.
+    It sends the 'archon init {acf_file}' command to the archon actor.
+
+    Args:
+        command (Command): CLU AMQP command class 
+        supervisors (dict[str, Supervisor]): supervisor instance of each spectrograph sp1, sp2, sp3
+        readout (str): readout mode that the user want to set [400Mhz, 800Mhz, HDR] corresponds to [400, 800, HDR]
+
+    Returns:
+        [type]: command.finish()
+    """
 
     if readout == "400":
         try:
