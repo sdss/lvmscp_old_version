@@ -152,3 +152,87 @@ class API:
                 amqpc.log.error(f"Exception: {e}")
 
         return result
+    
+    def lvmnps_ping():
+        try:
+            amqpc = AMQPClient(name=f"{sys.argv[0]}.proxy-{uuid.uuid4().hex[:8]}")
+
+            lvmnps = Proxy(amqpc, "lvmnps")
+            lvmnps.start()
+
+        except Exception as e:
+            amqpc.log.error(f"Exception: {e}")
+
+        # sequential
+        result = lvmnps.ping()
+        try:
+            result = lvmnps.ping()
+
+        except Exception as e:
+            amqpc.log.error(f"Exception: {e}")
+
+        print(result)
+        return result       
+
+    def lvmieb_ping():
+        try:
+            amqpc = AMQPClient(name=f"{sys.argv[0]}.proxy-{uuid.uuid4().hex[:8]}")
+
+            lvmieb = Proxy(amqpc, "lvmieb")
+            lvmieb.start()
+
+        except Exception as e:
+            amqpc.log.error(f"Exception: {e}")
+
+        # sequential
+        result = lvmieb.ping()
+        try:
+            result = lvmieb.ping()
+
+        except Exception as e:
+            amqpc.log.error(f"Exception: {e}")
+
+        print(result)
+        return result       
+    
+    def lamp_on(switch="DLI-03", portnum=None):
+        try:
+            amqpc = AMQPClient(name=f"{sys.argv[0]}.proxy-{uuid.uuid4().hex[:8]}")
+
+            lvmnps = Proxy(amqpc, "lvmnps")
+            lvmnps.start()
+
+        except Exception as e:
+            amqpc.log.error(f"Exception: {e}")
+
+        # sequential
+        try:
+            result = lvmnps.on(switch, portnum)
+
+        except Exception as e:
+            amqpc.log.error(f"Exception: {e}")
+
+        print(result)
+
+        return result
+    
+    def lamp_off(switch="DLI-03", portnum=None):
+        try:
+            amqpc = AMQPClient(name=f"{sys.argv[0]}.proxy-{uuid.uuid4().hex[:8]}")
+
+            lvmnps = Proxy(amqpc, "lvmnps")
+            lvmnps.start()
+
+        except Exception as e:
+            amqpc.log.error(f"Exception: {e}")
+
+        # sequential
+        try:
+            result = lvmnps.off(switch, portnum)
+
+        except Exception as e:
+            amqpc.log.error(f"Exception: {e}")
+
+        print(result)
+
+        return result
