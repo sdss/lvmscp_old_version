@@ -1,6 +1,7 @@
 # this is the example code of how to use the lvmscp as an API
+
 from lvmscp.module import API as spectrograph_interface
-import time
+
 
 spectrograph_interface.ping()
 spectrograph_interface.lvmnps_ping()
@@ -11,7 +12,7 @@ This is the example code for taking the focus image for the arc lamps
 """
 
 # Turning on the lamp (6 is the Neon lamp)
-spectrograph_interface.lamp_on("DLI-03",6)
+spectrograph_interface.lamp_on("DLI-03", 6)
 
 # setting the linear gage
 # spectrograph_interface.gage_set("z1")

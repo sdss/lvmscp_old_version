@@ -2,7 +2,6 @@ import click
 from clu.command import Command
 
 from lvmscp.actor.supervisor import Supervisor
-from lvmscp.exceptions import lvmscpError
 
 from . import parser
 
@@ -27,31 +26,9 @@ async def readout(command: Command, supervisors: dict[str, Supervisor], readout:
         [type]: command.finish()
     """
 
-    if readout == "400":
-        try:
-            archon_status_cmd = await command.actor.send_command(
-                "archon", "init lvm/config/archon/LVM_400MHz.acf"
-            )
-            await archon_status_cmd
-        except lvmscpError as err:
-            return command.fail(error=str(err))
-    elif readout == "800":
-        try:
-            archon_status_cmd = await command.actor.send_command(
-                "archon", "init lvm/config/archon/LVM_800MHz.acf"
-            )
-            await archon_status_cmd
-        except lvmscpError as err:
-            return command.fail(error=str(err))
-    elif readout == "HDR":
-        try:
-            archon_status_cmd = await command.actor.send_command("archon", "init --hdr")
-            await archon_status_cmd
-        except lvmscpError as err:
-            return command.fail(error=str(err))
-
-    if archon_status_cmd.status.did_fail:
-        return command.fail(text=archon_status_cmd.status)
+    for spectro in supervisors:
+        if supervisors[spectro].ready:
+            await supervisors[spectro].SetReadout(command, readout)
 
     if readout == "400" or readout == "800":
         command.info(text=f"The readout mode is set to {readout}mHz")

@@ -152,7 +152,7 @@ class API:
                 amqpc.log.error(f"Exception: {e}")
 
         return result
-    
+
     def lvmnps_ping():
         try:
             amqpc = AMQPClient(name=f"{sys.argv[0]}.proxy-{uuid.uuid4().hex[:8]}")
@@ -172,7 +172,7 @@ class API:
             amqpc.log.error(f"Exception: {e}")
 
         print(result)
-        return result       
+        return result
 
     def lvmieb_ping():
         try:
@@ -193,8 +193,8 @@ class API:
             amqpc.log.error(f"Exception: {e}")
 
         print(result)
-        return result       
-    
+        return result
+
     def lamp_on(switch="DLI-03", portnum=None):
         try:
             amqpc = AMQPClient(name=f"{sys.argv[0]}.proxy-{uuid.uuid4().hex[:8]}")
@@ -215,7 +215,7 @@ class API:
         print(result)
 
         return result
-    
+
     def lamp_off(switch="DLI-03", portnum=None):
         try:
             amqpc = AMQPClient(name=f"{sys.argv[0]}.proxy-{uuid.uuid4().hex[:8]}")

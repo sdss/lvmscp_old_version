@@ -56,60 +56,9 @@ async def powerstat(command: Command, supervisors: dict[str, Supervisor]):
     Returns:
         [type]: command.finish()
     """
-
-    nps_status_cmd = await command.actor.send_command("lvmnps", "status")
-    await nps_status_cmd
-
-    if nps_status_cmd.status.did_fail:
-        command.info(text="Failed to receive the power status from power switch")
-    else:
-        replies = nps_status_cmd.replies
-
     for spectro in supervisors:
-        if spectro == "sp1":
-            supervisors[spectro].ln2nir = convert(
-                replies[-2].body["status"]["DLI-02"]["LN2 NIR Valve"]["state"]
-            )
-            supervisors[spectro].ln2red = convert(
-                replies[-2].body["status"]["DLI-02"]["LN2 Red Valve"]["state"]
-            )
-
-            supervisors[spectro].archon_power_nps = convert(
-                replies[-2].body["status"]["DLI-02"]["LVM-Archon-02"]["state"]
-            )
-
-            supervisors[spectro].argon = convert(
-                replies[-2].body["status"]["DLI-03"]["Argon"]["state"]
-            )
-            supervisors[spectro].xenon = convert(
-                replies[-2].body["status"]["DLI-03"]["Xenon"]["state"]
-            )
-            supervisors[spectro].hgar = convert(
-                replies[-2].body["status"]["DLI-03"]["Hg (Ar)"]["state"]
-            )
-            supervisors[spectro].ldls = convert(
-                replies[-2].body["status"]["DLI-03"]["LDLS"]["state"]
-            )
-            supervisors[spectro].krypton = convert(
-                replies[-2].body["status"]["DLI-03"]["Krypton"]["state"]
-            )
-            supervisors[spectro].neon = convert(
-                replies[-2].body["status"]["DLI-03"]["Neon"]["state"]
-            )
-            supervisors[spectro].hgne = convert(
-                replies[-2].body["status"]["DLI-03"]["Hg (Ne)"]["state"]
-            )
-
-            supervisors[spectro].ieb06 = convert(
-                replies[-2].body["status"]["DLI-02"]["IEB06"]["state"]
-            )
-
-            supervisors[spectro].rpi = convert(
-                replies[-2].body["status"]["DLI-02"]["RPi"]["state"]
-            )
-            supervisors[spectro].pres_transducer = convert(
-                replies[-2].body["status"]["DLI-02"]["Pressure transducers"]["state"]
-            )
+        if supervisors[spectro].ready:
+            await supervisors[spectro].UpdatePowerStatus(command)
 
     return command.finish()
 

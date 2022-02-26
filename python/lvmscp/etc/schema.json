@@ -5,6 +5,7 @@
     "properties": {
         "text": {"type": "string"},
         "hartmann": {"type": "object"},
+        "data": {"type": "object"},
         "reply": {"type": "object",
             "text": {"type": "string"},
             "filename": {"type": "string"}
@@ -164,7 +165,6 @@
                     }
                 }
             },
-        "focus": {"type": "object"},
         "error": {"type": "string"}
     },
     "additionalProperties": false

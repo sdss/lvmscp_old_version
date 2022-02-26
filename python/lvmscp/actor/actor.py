@@ -52,6 +52,7 @@ class lvmscp(AMQPActor):
     async def start(self):
         """Start the actor and connect the controllers."""
         await super().start()
+        # add code for pinging lower actors by cluplus (CK 20220226)
 
     async def stop(self):
         with suppress(asyncio.CancelledError):
