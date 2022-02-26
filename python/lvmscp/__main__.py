@@ -46,13 +46,8 @@ def lvmscp(ctx, config_file, verbose):
 async def actor(ctx):
     """Runs the actor."""
     default_config_file = os.path.join(os.path.dirname(__file__), "etc/lvmscp.yml")
-    # config_file = ctx.obj["config_file"] or default_config_file
 
     lvmscp_obj = SCPActorInstance.from_config(default_config_file)
-
-    #    if ctx.obj["verbose"]:
-    #        scpactor_obj.log.fh.setLevel(0)
-    #        scpactor_obj.log.sh.setLevel(0)
 
     await lvmscp_obj.start()
     await lvmscp_obj.run_forever()

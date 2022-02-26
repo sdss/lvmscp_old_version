@@ -13,8 +13,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "Natural Language :: English",
     "Operating System :: OS Independent",
-	"Programming Language :: Python :: 3.6",
-	"Programming Language :: Python :: 3.7",
 	"Programming Language :: Python :: 3.8",
     "Topic :: Documentation :: Sphinx",
     "Topic :: Software Development :: Libraries :: Python Modules"
@@ -32,7 +30,7 @@ generate-setup-file = false
 lvmscp = "lvmscp.__main__:lvmscp"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.8,<3.10"
 sdss-tree = ">=2.15.2"
 sdss-access = ">=0.2.3"
 sdsstools = ">=0.4.0"
@@ -45,6 +43,7 @@ sdss-clu = "^1.0.0"
 daemonocle = "^1.2.3"
 black = "^21.7b0"
 sphinx-click = "^3.0.1"
+sdss-cluplus = "^0.0.14"
 
 [tool.poetry.dev-dependencies]
 ipython = ">=7.11.0"

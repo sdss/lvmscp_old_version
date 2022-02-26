@@ -1,0 +1,172 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "definitions": {},
+    "type": "object",
+    "properties": {
+        "text": {"type": "string"},
+        "hartmann": {"type": "object"},
+        "data": {"type": "object"},
+        "reply": {"type": "object",
+            "text": {"type": "string"},
+            "filename": {"type": "string"}
+        },
+        "filename": {"type": "array"},
+        "stat": {"type":"object",
+            "archon": {"type": "object",
+                "status": {"type": "string"},
+                "power": {"type": "string"},
+                "r1ccdtemp": {"type": "float"},
+                "r1heater": {"type": "float"},
+                "b1ccdtemp": {"type": "float"},
+                "b1heater": {"type": "float"},
+                "z1ccdtemp": {"type": "float"},
+                "z1heater": {"type": "float"}
+                },
+            "shutter": {"type": "object",
+                "sp1": {"type": "object",
+                    "shutter_power_status": {"type": "string"},
+                    "shutter_status": {"type": "string"}
+                },
+                "sp2": {"type": "object",
+                    "shutter_power_status": {"type": "string"},
+                    "shutter_status": {"type": "string"}
+                },
+                "sp3": {"type": "object",
+                    "shutter_power_status": {"type": "string"},
+                    "shutter_status": {"type": "string"}
+                }
+            },
+            "hartmann": {"type": "object",
+                "sp1": {"type": "object",
+                    "hartmann_left_power_status": {"type": "string"},
+                    "hartmann_right_power_status": {"type": "string"},
+                    "hartmann_left_status": {"type": "string"},
+                    "hartmann_right_status": {"type": "string"}
+                },
+                "sp2": {"type": "object",
+                    "hartmann_left_power_status": {"type": "string"},
+                    "hartmann_right_power_status": {"type": "string"},
+                    "hartmann_left_status": {"type": "string"},
+                    "hartmann_right_status": {"type": "string"}
+                },
+                "sp3": {"type": "object",
+                    "hartmann_left_power_status": {"type": "string"},
+                    "hartmann_right_power_status": {"type": "string"},
+                    "hartmann_left_status": {"type": "string"},
+                    "hartmann_right_status": {"type": "string"}
+                }
+            },
+            "ieb": {"type": "object",
+                "power": {"type": "object",
+                    "ieb06": {"type": "string"}},
+                "humidity": {"type": "object",
+                    "sp1": {"type": "object",
+                        "rhtRH1": {"type": "float"},
+                        "rhtRH2": {"type": "float"},
+                        "rhtRH3": {"type": "float"}
+                    },
+                    "sp2": {"type": "object",
+                        "rhtRH1": {"type": "string"},
+                        "rhtRH2": {"type": "string"},
+                        "rhtRH3": {"type": "string"}
+                    },
+                    "sp3": {"type": "object",
+                        "rhtRH1": {"type": "string"},
+                        "rhtRH2": {"type": "string"},
+                        "rhtRH3": {"type": "string"}
+                    }
+                },
+                "temperature": {"type": "object",
+                    "sp1": {"type": "object",
+                        "rhtT1": {"type": "float"},
+                        "rhtT2": {"type": "float"},
+                        "rhtT3": {"type": "float"},
+                        "rtd1": {"type": "float"},
+                        "rtd2": {"type": "float"},
+                        "rtd3": {"type": "float"},
+                        "rtd4": {"type": "float"}
+                    },
+                    "sp2": {"type": "object",
+                        "rhtT1": {"type": "string"},
+                        "rhtT2": {"type": "string"},
+                        "rhtT3": {"type": "string"},
+                        "rtd1": {"type": "string"},
+                        "rtd2": {"type": "string"},
+                        "rtd3": {"type": "string"},
+                        "rtd4": {"type": "string"}
+                    },
+                    "sp3": {"type": "object",
+                        "rhtT1": {"type": "string"},
+                        "rhtT2": {"type": "string"},
+                        "rhtT3": {"type": "string"},
+                        "rtd1": {"type": "string"},
+                        "rtd2": {"type": "string"},
+                        "rtd3": {"type": "string"},
+                        "rtd4": {"type": "string"}
+                    }
+                }
+            },
+            "transducer": {"type": "object",
+                "power": {"type": "object",
+                    "rasberry_pi_power": {"type": "string"},
+                    "transducer_power": {"type": "string"}},
+                "temperature": {"type": "object",
+                    "sp1": {"type": "object",
+                        "r1": {"type": "float"},
+                        "b1": {"type": "float"},
+                        "z1": {"type": "float"}
+                    },
+                    "sp2": {"type": "object",
+                        "r1": {"type": "string"},
+                        "b1": {"type": "string"},
+                        "z1": {"type": "string"}
+                    },
+                    "sp3": {"type": "object",
+                        "r1": {"type": "string"},
+                        "b1": {"type": "string"},
+                        "z1": {"type": "string"}
+                    }
+                },
+                "pressure": {"type": "object",
+                    "sp1": {"type": "object",
+                        "r1": {"type": "float"},
+                        "b1": {"type": "float"},
+                        "z1": {"type": "float"}
+                    },
+                    "sp2": {"type": "object",
+                        "r1": {"type": "string"},
+                        "b1": {"type": "string"},
+                        "z1": {"type": "string"}
+                    },
+                    "sp3": {"type": "object",
+                        "r1": {"type": "string"},
+                        "b1": {"type": "string"},
+                        "z1": {"type": "string"}
+                        }
+                    }
+                },
+            "testccd": {"type": "string"},
+            "lineargage": {"type": "object",
+                "sp1": {"type": "object",
+                    "r1": {"type": "object",
+                        "a": {"type": "float"},
+                        "b": {"type": "float"},
+                        "c": {"type": "float"}
+                    },
+                    "b1": {"type": "object",
+                        "a": {"type": "float"},
+                        "b": {"type": "float"},
+                        "c": {"type": "float"}
+                    },
+                    "z1": {"type": "object",
+                        "a": {"type": "float"},
+                        "b": {"type": "float"},
+                        "c": {"type": "float"}
+                    }
+                }
+            },
+        "error": {"type": "string"}
+    },
+    "additionalProperties": false
+}
+}

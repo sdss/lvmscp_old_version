@@ -9,6 +9,7 @@
 from __future__ import absolute_import, annotations, division, print_function
 
 import asyncio
+import os
 from contextlib import suppress
 
 from clu.actor import AMQPActor
@@ -26,11 +27,10 @@ spectro_list = ["sp1", "sp2", "sp3"]
 
 
 class lvmscp(AMQPActor):
-    """lvmscp controller actor.
-    In addition to the normal arguments and keyword parameters for
-    `~clu.actor.AMQPActor`, the class accepts the following parameters.
-    Parameters
-    ----------
+    """the main actor class of the lvmscp. Based on the AMQPActor from clu.actor
+
+    Args:
+        AMQPActor ([type]): class of the base actor from clu.actor
     """
 
     parser = SCP_command_parser
@@ -41,12 +41,18 @@ class lvmscp(AMQPActor):
         supervisors: tuple[Supervisor, ...] = (),
         **kwargs,
     ):
+        if "schema" not in kwargs:
+            kwargs["schema"] = os.path.join(
+                os.path.dirname(__file__),
+                "../etc/schema.json",
+            )
         super().__init__(*args, **kwargs)
         self.supervisors = {s.name: s for s in supervisors}
 
     async def start(self):
         """Start the actor and connect the controllers."""
         await super().start()
+        # add code for pinging lower actors by cluplus (CK 20220226)
 
     async def stop(self):
         with suppress(asyncio.CancelledError):
@@ -57,15 +63,16 @@ class lvmscp(AMQPActor):
 
     @classmethod
     def from_config(cls, config, *args, **kwargs):
+        """Creates an actor from a configuration file."""
         instance = super(lvmscp, cls).from_config(config, *args, **kwargs)
         assert isinstance(instance, lvmscp)
         assert isinstance(instance.config, dict)
         instance.parser_args = [instance.supervisors]
         for (ctrname, ctr) in instance.config.items():
             if ctrname in spectro_list:
-                print(ctrname, ctr)
+                # print(ctrname, ctr)
                 instance.supervisors.update({ctrname: Supervisor(ctrname)})
 
-        print(instance.supervisors)
+        # print(instance.supervisors)
 
         return instance
