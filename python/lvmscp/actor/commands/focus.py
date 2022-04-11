@@ -50,14 +50,14 @@ async def focus(
         if supervisors[spectro].ready:
             if supervisors[spectro].readoutmode == "800":
                 if dark:
-                    integ_time = (exptime + 47) * 3
+                    integ_time = (exptime + 47) * 3 * count
                 else:
-                    integ_time = (exptime + 47) * 2
+                    integ_time = (exptime + 47) * 2 * count
             elif supervisors[spectro].readoutmode == "400":
                 if dark:
-                    integ_time = (exptime + 20) * 3  # 19.4 second
+                    integ_time = (exptime + 20) * 3 * count  # 19.4 second
                 else:
-                    integ_time = (exptime + 20) * 2
+                    integ_time = (exptime + 20) * 2 * count
 
     command.info(f"Total exposure time will be = {integ_time} sec")
 

@@ -1,0 +1,20 @@
+# A dictionary of controller name to Spectrograph controller package connection parameters.
+
+sp1:
+  ccd:
+    name: null
+
+sp2:
+  ccd:
+    name: null
+
+sp3:
+  ccd:
+    name: null
+
+# Actor configuration for the AMQPActor class
+actor:
+  name: lvmnps
+  host: localhost
+  port: 5672
+  log_dir: '~/data/logs/lvmscp'

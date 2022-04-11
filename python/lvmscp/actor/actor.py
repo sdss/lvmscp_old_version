@@ -8,9 +8,8 @@
 
 from __future__ import absolute_import, annotations, division, print_function
 
-import asyncio
 import os
-from contextlib import suppress
+from typing import ClassVar, Dict
 
 from clu.actor import AMQPActor
 
@@ -34,6 +33,7 @@ class lvmscp(AMQPActor):
     """
 
     parser = SCP_command_parser
+    BASE_CONFIG: ClassVar[str | Dict | None] = None
 
     def __init__(
         self,
@@ -55,15 +55,17 @@ class lvmscp(AMQPActor):
         # add code for pinging lower actors by cluplus (CK 20220226)
 
     async def stop(self):
-        with suppress(asyncio.CancelledError):
-            for task in self._fetch_log_jobs:
-                task.cancel()
-                await task
-        return super().stop()
+        return await super().stop()
 
     @classmethod
     def from_config(cls, config, *args, **kwargs):
         """Creates an actor from a configuration file."""
+
+        if config is None:
+            if cls.BASE_CONFIG is None:
+                raise RuntimeError("The class does not have a base configuration.")
+            config = cls.BASE_CONFIG
+
         instance = super(lvmscp, cls).from_config(config, *args, **kwargs)
         assert isinstance(instance, lvmscp)
         assert isinstance(instance.config, dict)

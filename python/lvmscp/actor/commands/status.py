@@ -142,6 +142,8 @@ def updateReadyDict(item: dict, supervisors):
                                 "c": supervisors[spectro].gage_C,
                             }
                         },
+                        "labtemp": supervisors[spectro].labtemp,
+                        "labhumidity": supervisors[spectro].labhum,
                     }
                 }
             )

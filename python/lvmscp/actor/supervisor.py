@@ -80,6 +80,8 @@ class Supervisor:
             self.z1heater = "ERROR"
             self.readoutmode = "800"  # default readout mode is 800 MHz
             self.status_dict = {}
+            self.labtemp = -999
+            self.labhum = "ERROR"
         # sp2 and sp3 spectrograph is unavailable now. 20210117
         elif spectro == "sp2":
             self.ready = False
@@ -326,25 +328,34 @@ class Supervisor:
 
             # repeat the status command if the A value is wrong.
             # A value is not updated frequently due to hardware connection
-            if replies[-2].body[self.name]["z1"]["A"] == -999.0:
-                gage_status_cmd = await asyncio.wait_for(
-                    command.actor.send_command(
-                        "lvmieb", f"depth status {self.name} z1"
-                    ),
-                    1,
-                )
-                await gage_status_cmd
+            # 20220331 there was an error that the replies[-2].body[self.name]["z1"] reports False,
+            # so I added some if condition for the unfrequent update of the hardware connection
 
-                if gage_status_cmd.status.did_fail:
-                    command.info(
-                        text="Failed to receive the telemetry status from transducer"
+            print(replies[-2].body[self.name]["z1"])
+            if replies[-2].body[self.name]["z1"] is not False:
+                if replies[-2].body[self.name]["z1"]["A"] == -999.0:
+                    gage_status_cmd = await asyncio.wait_for(
+                        command.actor.send_command(
+                            "lvmieb", f"depth status {self.name} z1"
+                        ),
+                        1,
                     )
-                else:
-                    replies = gage_status_cmd.replies
+                    await gage_status_cmd
 
-            self.gage_A = replies[-2].body[self.name]["z1"]["A"]
-            self.gage_B = replies[-2].body[self.name]["z1"]["B"]
-            self.gage_C = replies[-2].body[self.name]["z1"]["C"]
+                    if gage_status_cmd.status.did_fail:
+                        command.info(
+                            text="Failed to receive the telemetry status from transducer"
+                        )
+                    else:
+                        replies = gage_status_cmd.replies
+
+                self.gage_A = replies[-2].body[self.name]["z1"]["A"]
+                self.gage_B = replies[-2].body[self.name]["z1"]["B"]
+                self.gage_C = replies[-2].body[self.name]["z1"]["C"]
+
+            # check the status of the lab temperature & lab humidity
+            self.labtemp, self.labhum = await self.read_govee(command)
+            print(self.labtemp, self.labhum)
 
         log.info(f"{pretty(datetime.datetime.now())} | after lvmscp update")
         return
@@ -556,22 +567,25 @@ class Supervisor:
                 raise click.UsageError(err)
 
             await self.UpdateStatus(command)
-            if self.shutter_power_status == "OFF":
-                raise click.UsageError(
-                    "Cannot start exposure : Exposure shutter power off"
-                )
-            elif self.hartmann_left_power_status == "OFF":
-                raise click.UsageError(
-                    "Cannot start exposure : Left hartmann door power off"
-                )
-            elif self.hartmann_right_power_status == "OFF":
-                raise click.UsageError(
-                    "Cannot start exposure : Right hartmann door power off"
-                )
-            elif self.shutter_status != "closed":
-                raise click.UsageError(
-                    "Shutter is already opened. The command will fail"
-                )
+
+            if flavour != "test":
+
+                if self.shutter_power_status == "OFF":
+                    raise click.UsageError(
+                        "Cannot start exposure : Exposure shutter power off"
+                    )
+                elif self.hartmann_left_power_status == "OFF":
+                    raise click.UsageError(
+                        "Cannot start exposure : Left hartmann door power off"
+                    )
+                elif self.hartmann_right_power_status == "OFF":
+                    raise click.UsageError(
+                        "Cannot start exposure : Right hartmann door power off"
+                    )
+                elif self.shutter_status != "closed":
+                    raise click.UsageError(
+                        "Shutter is already opened. The command will fail"
+                    )
 
             # when the flavour is object
             if flavour == "object":
@@ -624,9 +638,11 @@ class Supervisor:
                 log.info(
                     f"{pretty(datetime.datetime.now())} | Taking exposure {nn + 1} of {count}."
                 )
-                command.info(text=f"Taking exposure {nn + 1} of {count}.")
+                # command.info(text=f"Taking exposure {nn + 1} of {count}.")
                 # receive the telemetry data to add on the FIT header
-                header_json = await self.extra_header_telemetry(command, header)
+                header_json = await self.extra_header_telemetry(
+                    command, header, flavour
+                )
 
                 # Flushing before CCD exposure
                 if flush == "yes":
@@ -655,19 +671,29 @@ class Supervisor:
                     flavour = "flat"
 
                 # send exposure command to archon
-                archon_cmd = await (
-                    await command.actor.send_command(
-                        "archon",
-                        f"expose start --controller {spectro} --{flavour} --binning {binning} {exptime}",  # noqa E501
+
+                # for test image type, you have to send as 'object' to archon
+                if flavour == "test":
+                    archon_cmd = await (
+                        await command.actor.send_command(
+                            "archon",
+                            f"expose start --controller {spectro} --object --binning {binning} {exptime}",  # noqa E501
+                        )
                     )
-                )
+                else:
+                    archon_cmd = await (
+                        await command.actor.send_command(
+                            "archon",
+                            f"expose start --controller {spectro} --{flavour} --binning {binning} {exptime}",  # noqa E501
+                        )
+                    )
                 if archon_cmd.status.did_fail:
                     await command.actor.send_command("archon", "expose abort --flush")
                     log.error(
                         f"{pretty2(datetime.datetime.now())} | Failed starting exposure. Trying to abort and exiting."  # noqa E501
                     )
                     raise click.UsageError(
-                        text="Failed starting exposure. Trying to abort and exiting."
+                        "Failed starting exposure. Trying to abort and exiting."
                     )
                 else:
                     reply = archon_cmd.replies
@@ -677,7 +703,9 @@ class Supervisor:
                     command.info(text=reply[-2].body["text"])
 
                 # opening the shutter for arc and object type frame
-                if (flavour != "bias" and flavour != "dark") and exptime > 0:
+                if (
+                    flavour != "bias" and flavour != "dark" and flavour != "test"
+                ) and exptime > 0:
                     # Use command to access the actor and command the shutter
                     log.info(f"{pretty(datetime.datetime.now())} | Opening the shutter")
                     command.info(text="Opening the shutter")
@@ -726,7 +754,7 @@ class Supervisor:
                         )
                         raise click.UsageError("Failed to close the shutter")
                 # dark frame doesn't have to open the shutter
-                elif flavour == "dark":
+                elif flavour == "dark" and flavour == "test":
                     await asyncio.create_task(wait_exposure(command, exptime))
 
                 # Finish exposure
@@ -825,14 +853,11 @@ class Supervisor:
 
         return check_lamp
 
-    async def extra_header_telemetry(self, command, header: str):
+    async def extra_header_telemetry(self, command, header: str, flavour):
         """telemetry from the devices and add it on the header
 
         Args:
             command ([type]): [description]
-            spectro (str): [description]
-            check_lamp ([type]): [description]
-            supervisors ([type]): [description]
             header (str): [description]
 
         Returns:
@@ -891,10 +916,29 @@ class Supervisor:
                 "DEPTHB": self.gage_B,
                 "DEPTHC": self.gage_C,
             },
+            "LABTEMP": (self.labtemp, "Govee H5179 lab temperature [C]"),
+            "IMAGETYP": (flavour, "Image type"),
         }
 
         log.debug(f"{pretty(datetime.datetime.now())} | check_lamp: {check_lamp}")
-        header_dict.update(check_lamp)
+
+        # error report from Pavan & Nick 20220309
+        if check_lamp is not False:
+            print(check_lamp)
+            header_dict.update(check_lamp)
+        elif check_lamp is False:
+            print(check_lamp)
+            check_lamp = {
+                "ARGON": self.argon,
+                "XENON": self.xenon,
+                "HGAR": self.hgar,
+                "LDLS": self.ldls,
+                "KRYPTON": self.krypton,
+                "NEON": self.neon,
+                "HGNE": self.hgne,
+                "NIRLED": self.nirled,
+            }
+
         log.debug(f"{pretty(datetime.datetime.now())} | header_dict: {header_dict}")
 
         # adding header to here 20211222 CK
@@ -906,6 +950,21 @@ class Supervisor:
         header_json = json.dumps(header_dict, indent=None)
 
         return header_json
+
+    async def read_govee(self, command):
+
+        # Check the status of govee from lvmieb
+        govee_status_cmd = await command.actor.send_command("lvmieb", "labtemp")
+        await govee_status_cmd
+
+        if govee_status_cmd.status.did_fail:
+            command.info(text="Failed to receive the status of the govee (lab) sensor")
+        else:
+            replies = govee_status_cmd.replies
+            self.labtemp = replies[-2].body["labtemp"]
+            self.labhum = replies[-2].body["labhum"]
+
+        return self.labtemp, self.labhum
 
 
 async def check_actor_ping(command, actor_name: str):
