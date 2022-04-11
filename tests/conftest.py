@@ -13,7 +13,7 @@ more information.
 import os
 
 import clu.testing
-import pytest_asyncio
+import pytest as pytest
 from clu import LegacyActor
 from clu.actor import AMQPBaseActor
 
@@ -23,14 +23,14 @@ from lvmscp import config
 from lvmscp.actor.actor import lvmscp as ScpActor
 
 
-@pytest_asyncio.fixture()
+@pytest.fixture()
 def test_config():
 
     extra = read_yaml_file(os.path.join(os.path.dirname(__file__), "test_actor.yml"))
     yield merge_config(extra, config)
 
 
-@pytest_asyncio.fixture()
+@pytest.fixture()
 async def actor(test_config: dict, mocker):
 
     # We need to call the actor .start() method to force it to create the
@@ -51,14 +51,14 @@ async def actor(test_config: dict, mocker):
     await _actor.stop()
 
 
-@pytest_asyncio.fixture()
+@pytest.fixture()
 def test_config_lvmieb():
 
     extra = read_yaml_file(os.path.join(os.path.dirname(__file__), "test_lvmieb.yml"))
     yield merge_config(extra, config)
 
 
-@pytest_asyncio.fixture()
+@pytest.fixture()
 async def lvmieb(test_config_lvmieb: dict, mocker):
 
     # We need to call the actor .start() method to force it to create the
