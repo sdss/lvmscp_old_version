@@ -36,11 +36,11 @@ sdss-access = ">=0.2.3"
 sdsstools = ">=0.4.0"
 Sphinx = {version="^3.0.0", optional=true}
 sphinx_bootstrap_theme = { version = ">=0.4.12", optional=true}
-click = "^8.0.0"
+click = "^8.1.2"
 click-default-group = "^1.2.2"
 sdss-clu = "^1.0.0"
 daemonocle = "^1.2.3"
-black = "^21.7b0"
+black = "^22.3.0"
 sphinx-click = "^3.0.1"
 sdss-cluplus = "^0.0.14"
 
