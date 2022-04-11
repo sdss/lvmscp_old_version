@@ -47,7 +47,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install poetry
-        poetry install
+        poetry install -vv || { rm -rf .poetry_cache/virtualenvs/*; poetry install -vv; }
 
     - name: Lint with flake8
       run: |
