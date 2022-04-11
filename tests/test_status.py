@@ -3,7 +3,7 @@
 async def test_status(actor: ScpActor, lvmieb):
 
     print(actor.parser_args)
-    assert actor.parser_args[0]["sp1"].name == "sp"
+    assert actor.parser_args[0]["sp1"].name == "sp1"
 
     command = await lvmieb.invoke_mock_command("ping")
     await command
