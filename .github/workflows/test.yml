@@ -64,8 +64,8 @@ jobs:
       run: |
         poetry run isort -c . -vvv
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1.0.3
+    - name: "Upload coverage to Codecov"
+      uses: codecov/codecov-action@v2
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.xml
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
