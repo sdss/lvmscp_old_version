@@ -1269,7 +1269,7 @@ docs = ["Sphinx", "sphinx_bootstrap_theme"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.10"
-content-hash = "37bbbca0da58f75476a884a17bad8577ecbc27d0db1372c04972fb9021024df2"
+content-hash = "f640ab541cc6a535255238a6a347b4ba48b1a3126fde7b3b174fd7006541f0fb"
 
 [metadata.files]
 aio-pika = [
