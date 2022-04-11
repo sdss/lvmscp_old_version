@@ -33,7 +33,7 @@ log.sh.setLevel(logging.DEBUG)
 @click.argument("COUNT", type=int, default=1, required=False)
 @click.argument(
     "FLAVOUR",
-    type=click.Choice(["bias", "object", "flat", "arc", "dark"]),
+    type=click.Choice(["bias", "object", "flat", "arc", "dark", "test"]),
     default="object",
     required=False,
 )
@@ -86,6 +86,7 @@ async def exposure(
 
     for spectro in supervisors:
         if supervisors[spectro].ready:
+            print(supervisors[spectro].name)
             data_directory = await supervisors[spectro].exposure(
                 command, exptime, count, flavour, binning, flush, header
             )

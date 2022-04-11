@@ -58,3 +58,15 @@ async def set(command, supervisors: dict[str, Supervisor], request: str, spectro
 @hartmann.command()
 async def init(command, supervisors: dict[str, Supervisor], request: str, spectro: str):
     """Write the command for turning on the hartmann doors and initialize both"""
+
+    for spectro in supervisors:
+        if supervisors[spectro].ready:
+            await supervisors[spectro].SetHartmann(command, request)
+            command.info(
+                hartmann={
+                    "hartmann_left": supervisors[spectro].hartmann_left_status,
+                    "hartmann_right": supervisors[spectro].hartmann_right_status,
+                }
+            )
+
+    return command.finish()

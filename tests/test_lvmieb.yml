@@ -1,0 +1,8 @@
+# A dictionary of controller name to Spectrograph controller package connection parameters.
+
+# Actor configuration for the AMQPActor class
+actor:
+  name: lvmieb
+  host: localhost
+  port: 5672
+  log_dir: '~/data/logs/lvmscp'
