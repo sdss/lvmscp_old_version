@@ -62,3 +62,9 @@ jobs:
     - name: Lint with isort
       run: |
         poetry run isort -c . -vvv
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1.0.3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: ./coverage.xml
