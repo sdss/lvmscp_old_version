@@ -79,8 +79,9 @@ addopts = "--cov lvmscp --cov-report xml --cov-report html --cov-report term"
 
 [tool.coverage.run]
 branch = true
-include = ["python/lvmscp/*", "tests/coverage.xml"]
+include = ["python/lvmscp/*"]
 omit = [
+    "python/lvmscp/__main__.py",
 ]
 
 [tool.coverage.report]
