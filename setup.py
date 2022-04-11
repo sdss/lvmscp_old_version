@@ -21,6 +21,7 @@ install_requires = \
  'sdss-cluplus>=0.0.14,<0.0.15',
  'sdss-tree>=2.15.2',
  'sdsstools>=0.4.0',
+ 'setuptools>=62.1.0,<63.0.0',
  'sphinx-click>=3.0.1,<4.0.0']
 
 extras_require = \
